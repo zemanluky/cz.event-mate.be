@@ -1,0 +1,9 @@
+# ignore local environment variables
+.env
+
+# ignore IDE files
+.idea
+.vscode
+
+# ignore mac files
+.DS_Store
