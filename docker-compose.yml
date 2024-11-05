@@ -1,0 +1,72 @@
+services:
+  # mongo database
+  mongo:
+    image: mongo:8
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: default_db
+
+  # proxy server
+  nginx:
+    build:
+      context: ./docker/nginx
+#    volumes:
+#      - ./docker/nginx/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+#      - ./docker/nginx/nginx/mime.types:/etc/nginx/mime.types:ro
+#      - ./docker/nginx/sites-available/default.conf:/etc/nginx/sites-enabled/default.conf:ro
+    links:
+      - ms_auth
+      - ms_event
+      - ms_user
+    ports:
+      - "80:80"
+      - "443:443"
+
+  # auth microservice
+  ms_auth:
+    build:
+      dockerfile: './docker/bun/Dockerfile'
+    links:
+      - mongo:mongo
+    volumes:
+      - ./credentials:/app/credentials
+      - ./src/auth:/app:cached
+    environment:
+      APP_NAME: Auth
+      APP_PORT: ${MS_AUTH_PORT}
+      MS_USER_URL: http://ms_user/
+      MS_EVENT_URL: http://ms_user/
+      MONGO_DSN: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo/${MS_AUTH_DB}
+
+  # user microservice
+  ms_user:
+    build:
+      dockerfile: './docker/bun/Dockerfile'
+    links:
+      - mongo:mongo
+    volumes:
+      - ./credentials:/app/credentials
+      - ./src/user:/app:cached
+    environment:
+      APP_NAME: Users
+      APP_PORT: ${MS_USER_PORT}
+      MS_AUTH_URL: http://ms_auth/
+      MS_EVENT_URL: http://ms_event/
+      MONGO_DSN: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo/${MS_USER_DB}
+
+  # event microservice
+  ms_event:
+    build:
+      dockerfile: './docker/bun/Dockerfile'
+    links:
+      - mongo:mongo
+    volumes:
+      - ./credentials:/app/credentials
+      - ./src/event:/app:cached
+    environment:
+      APP_NAME: Events
+      APP_PORT: ${MS_EVENT_PORT}
+      MS_AUTH_URL: http://ms_auth/
+      MS_USER_URL: http://ms_user/
+      MONGO_DSN: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo/${MS_EVENT_DB}
