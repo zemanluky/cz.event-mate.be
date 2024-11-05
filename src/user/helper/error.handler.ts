@@ -1,8 +1,8 @@
 import type {NextFunction, Request, Response} from "express";
-import {BaseAppError} from "../error/base-app.error.ts";
+import {BaseAppError} from "../error/response/base-app.error.ts";
 import {errorResponse, validationResponse} from "./response.helper.ts";
 import {StatusCodes} from "http-status-codes";
-import {ValidationError} from "../error/validation.error.ts";
+import {ValidationError} from "../error/response/validation.error.ts";
 
 /**
  * Global error handler that may be used as one of the last middlewares after all controllers registrations.

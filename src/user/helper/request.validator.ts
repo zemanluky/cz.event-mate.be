@@ -2,7 +2,7 @@ import type {Request, Response} from "express";
 import type {ZodRawShape} from "zod";
 import {ZodError, ZodObject} from "zod";
 import type {NextFunction} from "express";
-import {ValidationError} from "../error/validation.error.ts";
+import {ValidationError} from "../error/response/validation.error.ts";
 
 /**
  * Validates the body of a request.

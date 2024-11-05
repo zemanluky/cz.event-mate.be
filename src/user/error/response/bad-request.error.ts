@@ -1,4 +1,4 @@
-import {BaseAppError} from "./base-app.error";
+import {BaseAppError} from "./base-app.error.ts";
 import {StatusCodes} from "http-status-codes";
 
 /** Error used for indicating an entity or item does not exist. */

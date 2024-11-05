@@ -4,7 +4,8 @@
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/express": "^5.0.0"
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -12,6 +13,7 @@
   "dependencies": {
     "express": "^4.21.1",
     "http-status-codes": "^2.3.0",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.7.3",
     "zod": "^3.23.8"
   }
