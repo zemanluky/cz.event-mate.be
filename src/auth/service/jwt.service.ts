@@ -1,5 +1,4 @@
 import * as fs from "node:fs";
-import * as mongoose from "mongoose";
 import jwt, {JsonWebTokenError, type JwtPayload, NotBeforeError, TokenExpiredError} from "jsonwebtoken";
 import {InvalidJwt} from "../error/invalid-jwt-token.error.ts";
 
@@ -13,8 +12,8 @@ const getPrivateKey = (): Buffer => {
 
     if (!fs.existsSync(privateKeyPath))
         throw new Error(
-            'Private key must exist in order to sign new JWT tokens.' +
-            `Please, check that the key at location ${privateKeyPath} exists and has correct privileges set or change 
+            'Private key must exist in order to sign new JWT tokens. ' +
+            `Please, check that the key at location ${privateKeyPath} exists and has correct privileges set, or change 
             the JWT_PRIVATE_KEY env variable to change the location.`
         );
 
@@ -29,8 +28,8 @@ const getPublicKey = (): Buffer => {
 
     if (!fs.existsSync(publicKey))
         throw new Error(
-            'Public key\'s must exist in order to sign new JWT tokens.' +
-            `Please, check that the key at location ${publicKey} exists and has correct privileges set or change 
+            'Public key must exist in order to verify incoming JWT tokens. ' +
+            `Please, check that the key at location ${publicKey} exists and has correct privileges set, or change 
             the JWT_PUBLIC_KEY env variable to change the location.`
         );
 

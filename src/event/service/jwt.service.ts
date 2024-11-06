@@ -1,25 +1,8 @@
 import * as fs from "node:fs";
-import * as mongoose from "mongoose";
 import jwt, {JsonWebTokenError, type JwtPayload, NotBeforeError, TokenExpiredError} from "jsonwebtoken";
 import {InvalidJwt} from "../error/invalid-jwt-token.error.ts";
 
 const issuer = process.env.JWT_ISSUER || 'event-mate:auth';
-
-/**
- * Gets the JWT private key file for signing JWT tokens.
- */
-const getPrivateKey = (): Buffer => {
-    const privateKeyPath = process.env.JWT_PRIVATE_KEY || '/app/credentials/jwt/private-key.pem';
-
-    if (!fs.existsSync(privateKeyPath))
-        throw new Error(
-            'Private key must exist in order to sign new JWT tokens.' +
-            `Please, check that the key at location ${privateKeyPath} exists and has correct privileges set or change 
-            the JWT_PRIVATE_KEY env variable to change the location.`
-        );
-
-    return fs.readFileSync(privateKeyPath);
-}
 
 /**
  * Gets the JWT public key file for verifying JWT tokens.
@@ -29,26 +12,12 @@ const getPublicKey = (): Buffer => {
 
     if (!fs.existsSync(publicKey))
         throw new Error(
-            'Public key\'s must exist in order to sign new JWT tokens.' +
-            `Please, check that the key at location ${publicKey} exists and has correct privileges set or change 
+            'Public key must exist in order to verify incoming JWT tokens. ' +
+            `Please, check that the key at location ${publicKey} exists and has correct privileges set, or change 
             the JWT_PUBLIC_KEY env variable to change the location.`
         );
 
     return fs.readFileSync(publicKey);
-}
-
-/**
- * Signs a given JWT token.
- */
-export const signJwt = (userId: string, expireIn: string, jti?: string): string => {
-    const keyFile = getPrivateKey();
-
-    return jwt.sign({ uid: userId }, keyFile, {
-        algorithm: "RS256",
-        issuer: issuer,
-        expiresIn: expireIn,
-        ...(jti !== undefined ? {jwtid: jti} : {})
-    });
 }
 
 /**
