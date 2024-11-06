@@ -9,7 +9,7 @@ import {string} from "zod";
  * Global error handler that may be used as one of the last middlewares after all controllers registrations.
  * This mostly handles transformation of multiple types of errors to a JSON response.
  * @param err The error thrown.
- * @param req The response.
+ * @param req The request.
  * @param res The response.
  * @param next Express next handler call.
  */
