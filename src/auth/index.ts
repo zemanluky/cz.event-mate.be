@@ -10,6 +10,9 @@ if (!port)
 
 const app = express();
 
+// parse json body
+app.use(express.json());
+
 // add controllers here...
 app.use('/hello', helloWorldController);
 
