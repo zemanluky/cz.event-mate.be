@@ -1,15 +1,15 @@
 import type {NextFunction, Request, Response} from "express";
-import {BaseAppError} from "../error/request/base-app.error.ts";
+import {BaseAppError} from "../error/response/base-app.error.ts";
 import {errorResponse, validationResponse} from "./response.helper.ts";
 import {StatusCodes} from "http-status-codes";
-import {ValidationError} from "../error/request/validation.error.ts";
+import {ValidationError} from "../error/response/validation.error.ts";
 import {string} from "zod";
 
 /**
  * Global error handler that may be used as one of the last middlewares after all controllers registrations.
  * This mostly handles transformation of multiple types of errors to a JSON response.
  * @param err The error thrown.
- * @param req The request.
+ * @param req The response.
  * @param res The response.
  * @param next Express next handler call.
  */

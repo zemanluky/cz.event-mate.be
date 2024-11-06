@@ -7,5 +7,5 @@ export const fooSchema = z.object({
     number: z.number().min(0).max(10),
 });
 
-// creates a type for the schema, which enables type-hinting on the request object
+// creates a type for the schema, which enables type-hinting on the response object
 export type TFoo = z.infer<typeof fooSchema>;

@@ -2,7 +2,7 @@ import {BaseAppError} from "./base-app.error.ts";
 import {StatusCodes} from "http-status-codes";
 import type {ZodIssue} from "zod";
 
-/** Error used for indicating the request body, params, or query is invalid. */
+/** Error used for indicating the response body, params, or query is invalid. */
 export class ValidationError extends BaseAppError
 {
     private readonly _zodIssues: ZodIssue[]|null;

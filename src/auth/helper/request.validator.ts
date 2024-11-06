@@ -2,17 +2,17 @@ import type {Request, Response} from "express";
 import type {ZodRawShape} from "zod";
 import {ZodError, ZodObject} from "zod";
 import type {NextFunction} from "express";
-import {ValidationError} from "../error/request/validation.error.ts";
+import {ValidationError} from "../error/response/validation.error.ts";
 
 /**
- * Validates the body of a request.
+ * Validates the body of a response.
  * Use as a handler before the main controller endpoint handler.
  *
  * @param schema The schema to use for validation.
  */
 export function bodyValidator<T extends ZodRawShape>(schema: ZodObject<T>) {
     return (req: Request, res: Response, next: NextFunction) => {
-        // try parsing the request body
+        // try parsing the response body
         try {
             req.body = schema.parse(req.body);
             next();
@@ -37,7 +37,7 @@ export function bodyValidator<T extends ZodRawShape>(schema: ZodObject<T>) {
  */
 export function queryValidator<T extends ZodRawShape>(schema: ZodObject<T>) {
     return (req: Request, res: Response, next: NextFunction) => {
-        // try parsing the request query
+        // try parsing the response query
         try {
             req.query = schema.parse(req.query);
             next();
@@ -62,7 +62,7 @@ export function queryValidator<T extends ZodRawShape>(schema: ZodObject<T>) {
  */
 export function paramValidator<T extends ZodRawShape>(schema: ZodObject<T>) {
     return (req: Request, res: Response, next: NextFunction) => {
-        // try parsing the request parameters
+        // try parsing the response parameters
         try {
             req.params = schema.parse(req.params);
             next();

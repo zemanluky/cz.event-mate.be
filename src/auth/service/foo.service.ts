@@ -1,6 +1,6 @@
 import type {TFoo as TFooApi} from "../schema/request/foo.schema.ts";
 import {Foo, type IFoo, type TFoo} from "../schema/db/foo.schema.ts";
-import {NotFoundError} from "../error/request/not-found.error.ts";
+import {NotFoundError} from "../error/response/not-found.error.ts";
 
 /**
  * Saves Foo data from API to the database collection.

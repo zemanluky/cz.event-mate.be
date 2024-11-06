@@ -37,8 +37,8 @@ services:
     environment:
       APP_NAME: Auth
       APP_PORT: ${MS_AUTH_PORT}
-      MS_USER_URL: http://ms_user/
-      MS_EVENT_URL: http://ms_user/
+      MS_USER_URL: http://ms_user:${MS_USER_PORT}/
+      MS_EVENT_URL: http://ms_event:${MS_EVENT_PORT}/
       MONGO_DSN: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/${MS_AUTH_DB}?authSource=admin
 
   # user microservice
@@ -53,8 +53,8 @@ services:
     environment:
       APP_NAME: Users
       APP_PORT: ${MS_USER_PORT}
-      MS_AUTH_URL: http://ms_auth/
-      MS_EVENT_URL: http://ms_event/
+      MS_AUTH_URL: http://ms_auth:${MS_AUTH_PORT}/
+      MS_EVENT_URL: http://ms_event:${MS_EVENT_PORT}/
       MONGO_DSN: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/${MS_USER_DB}?authSource=admin
 
   # event microservice
@@ -69,6 +69,6 @@ services:
     environment:
       APP_NAME: Events
       APP_PORT: ${MS_EVENT_PORT}
-      MS_AUTH_URL: http://ms_auth/
-      MS_USER_URL: http://ms_user/
+      MS_AUTH_URL: http://ms_auth:${MS_AUTH_PORT}/
+      MS_USER_URL: http://ms_user:${MS_USER_PORT}/
       MONGO_DSN: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/${MS_EVENT_DB}?authSource=admin

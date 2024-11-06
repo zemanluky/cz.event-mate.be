@@ -2,11 +2,15 @@ import express, {type Request, type Response} from "express";
 import {fooSchema, type TFoo} from "../schema/request/foo.schema.ts";
 import {bodyValidator} from "../helper/request.validator.ts";
 import {findById, saveFromApi} from "../service/foo.service.ts";
+import {microserviceUrl} from "../helper/microservice.url.ts";
 
 export const helloWorldController = express.Router();
 
-helloWorldController.get('/', (req: Request, res: Response) => {
-    res.send('Hello World!');
+helloWorldController.get('/', async (req: Request, res: Response) => {
+    const response = await fetch(microserviceUrl('user', 'hello'));
+    const greeting = await response.text();
+
+    res.send(`Greeting from user microservice: ${greeting}`);
 });
 
 helloWorldController.post('/foo',

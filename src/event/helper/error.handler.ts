@@ -8,7 +8,7 @@ import {ValidationError} from "../error/response/validation.error.ts";
  * Global error handler that may be used as one of the last middlewares after all controllers registrations.
  * This mostly handles transformation of multiple types of errors to a JSON response.
  * @param err The error thrown.
- * @param req The request.
+ * @param req The response.
  * @param res The response.
  * @param next Express next handler call.
  */
