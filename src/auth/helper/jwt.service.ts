@@ -39,10 +39,10 @@ const getPublicKey = (): Buffer => {
 /**
  * Signs a given JWT token.
  */
-export const signJwt = (userId: string, expireIn: string, jti?: string): string => {
+export const signJwt = (userId: string, expireIn: string, role: string, jti?: string): string => {
     const keyFile = getPrivateKey();
 
-    return jwt.sign({ uid: userId }, keyFile, {
+    return jwt.sign({ uid: userId, role: role }, keyFile, {
         algorithm: "RS256",
         issuer: issuer,
         expiresIn: expireIn,
