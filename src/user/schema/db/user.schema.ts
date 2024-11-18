@@ -1,4 +1,5 @@
 import {type HydratedDocument, type InferRawDocType, model, type Model, Schema, Types} from "mongoose";
+import {type IUserRating, userRatingSchema} from "./rating.schema.ts";
 
 export interface IUser {
     _id: Types.ObjectId;
@@ -16,9 +17,11 @@ export interface IUser {
     profile_picture_path: string|null;
     // Array of friends of a given user
     friends: Array<Types.ObjectId>;
+    // Array of ratings given to the user
+    ratings: Array<IUserRating>;
 }
 
-export type THydratedUserDocument = HydratedDocument<IUser>;
+export type THydratedUserDocument = HydratedDocument<IUser & { ratings?: Types.DocumentArray<IUserRating> }>;
 
 type TUserModel = Model<IUser, {}, {}, {}, THydratedUserDocument>;
 
@@ -30,6 +33,7 @@ const userSchema = new Schema<IUser, TUserModel>({
     bio: { type: String, required: false, default: null },
     profile_picture_path: { type: String, required: false, default: null },
     friends: { type: [Types.ObjectId], required: false, default: [] },
+    ratings: { type: [userRatingSchema], required: false, default: [] },
 });
 
 export const User = model<IUser, TUserModel>('User', userSchema);

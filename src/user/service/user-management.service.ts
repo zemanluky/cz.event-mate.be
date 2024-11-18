@@ -95,5 +95,26 @@ export async function registerUser(data: TRegistrationData): Promise<THydratedUs
  * @param id ID of the user.
  */
 export async function updateProfile(data: TUpdateUserData, id: string): Promise<THydratedUserDocument> {
+    const user = await User.findById(id);
 
+    if (!user)
+        throw new NotFoundError('The user to update was not found.', 'user');
+
+    // we are updating the username, and we have to check it has changed
+    if (user.username !== data.username) {
+        const exists = await User.exists({username: data.username, _id: {$ne: id}});
+
+        if (exists !== null)
+            throw new BadRequestError('The username is already in use.', 'credentials_in_use');
+
+        user.username = data.username;
+    }
+
+    // update the user's data
+    user.bio = data.bio || null;
+    user.name = data.name;
+    user.surname = data.surname;
+
+    // save the new data
+    return await user.save();
 }

@@ -9,10 +9,17 @@ import {
 } from "../schema/request/user.schema.ts";
 import {loginGuard} from "../helper/login-guard.ts";
 import {bodyValidator, paramValidator, queryValidator} from "../helper/request.validator.ts";
-import {checkAvailability, getIdentityByEmail, registerUser} from "../service/user-management.service.ts";
+import {
+    checkAvailability,
+    getIdentityByEmail,
+    registerUser,
+    updateProfile
+} from "../service/user-management.service.ts";
 import {successResponse} from "../helper/response.helper.ts";
 import {StatusCodes} from "http-status-codes";
 import {microserviceGuard} from "../helper/microservice.url.ts";
+import * as R from 'remeda';
+import {getUser} from "../service/user.service.ts";
 
 export const userManagementController = express.Router();
 
@@ -56,6 +63,18 @@ userManagementController.get(
 userManagementController.put(
     '/profile', loginGuard(), bodyValidator(updateUserSchema),
     async (req: AppRequest<never,never,TUpdateUserData>, res: Response) => {
-
+        const updatedUser = await updateProfile(req.body!, req.user!.id);
+        successResponse(res, R.omit(updatedUser.toObject(), ['friends', 'profile_picture_path']));
     }
 )
+
+/**
+ * Gets user's own user profile.
+ */
+userManagementController.get(
+    '/profile', loginGuard(),
+    async (req: AppRequest, res: Response) => {
+        const user = await getUser(req.user!.id);
+        successResponse(res, R.omit(user, ['friends', 'profile_picture_path']));
+    }
+);
