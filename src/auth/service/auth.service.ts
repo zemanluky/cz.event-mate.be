@@ -1,4 +1,4 @@
-import type {TLoginData} from "../schema/request/auth.schema.ts";
+import type {TLoginData, TRegisterData} from "../schema/request/auth.schema.ts";
 import {type THydratedAuthDocument, Auth} from "../schema/db/auth.schema.ts";
 import {signJwt, verifyJwt} from "../helper/jwt.service.ts";
 import {UnauthenticatedError} from "../error/response/unauthenticated.error.ts";
@@ -6,6 +6,12 @@ import ms from "ms";
 import {addMilliseconds, isAfter} from "date-fns";
 import * as R from 'remeda';
 import {InvalidJwt} from "../error/invalid-jwt-token.error.ts";
+import * as mongoose from "mongoose";
+import {Types} from "mongoose";
+import {BadRequestError} from "../error/response/bad-request.error.ts";
+import type {TResponse} from "../helper/response.helper.ts";
+import {getFetchHeaders, microserviceUrl} from "../helper/microservice.url.ts";
+import {ServerError} from "../error/response/server.error.ts";
 
 // token lifetime configuration
 const accessTokenLifetime = process.env.JWT_ACCESS_LIFETIME || '15m';
@@ -21,11 +27,11 @@ type TTokenPair = { access: string, refresh: string };
  * @param auth
  */
 function createAccessToken(auth: THydratedAuthDocument): string {
-    return signJwt(auth._id.toString(), accessTokenLifetime, auth.role);
+    return signJwt(auth._id.toString(), auth.role, accessTokenLifetime);
 }
 
 /**
- * Creates new refresh token. It generates JT
+ * Creates new refresh token.
  * @param auth
  * @param jti
  */
@@ -77,13 +83,24 @@ async function createRefreshToken(auth: THydratedAuthDocument, jti?: string): Pr
 
 /**
  * Logs in a given user based on their email and password.
- * It may also accept user's username instead of their email.
  * It generates a JWT access and refresh token.
  */
 export async function login(request: TLoginData): Promise<TTokenPair> {
+    // get the user ID from the user microservice
+    const response: TResponse<{id: string}> = await fetch(
+        microserviceUrl('user', `identity/${request.email}`),
+        {headers: getFetchHeaders()}
+    ).then(res => res.json());
+
+    if (!response.success) {
+        // the user does not exist, probably the email is incorrect
+        if (response.status === 404) throw new UnauthenticatedError('Please check your login credentials.');
+
+        throw new ServerError(`Failed to authenticate user due to failed retrieval of identity: ${response.error.message}.`);
+    }
+
     const auth = await Auth
-        .findOne()
-        .or([{ email: request.login }, { username: request.login }])
+        .findOne(new Types.ObjectId(response.data.id))
         .exec()
     ;
 
@@ -150,4 +167,16 @@ export async function logout(refreshToken: string): Promise<void> {
         // when we don't know the error, we definitely want to throw that so that it gets logged
         throw error;
     }
+}
+
+/**
+ * Registers new Auth profile to the application.
+ */
+export async function register(data: TRegisterData): Promise<THydratedAuthDocument> {
+    const auth = new Auth({
+        _id: new Types.ObjectId(data.id),
+        password: await Bun.password.hash(data.password)
+    });
+
+    return await auth.save();
 }

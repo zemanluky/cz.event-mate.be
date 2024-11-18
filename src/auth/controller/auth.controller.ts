@@ -1,10 +1,16 @@
 import express, {type Response} from "express";
 import {bodyValidator} from "../helper/request.validator.ts";
-import {loginBodySchema, type TLoginData} from "../schema/request/auth.schema.ts";
-import {login, logout, refresh} from "../service/auth.service.ts";
+import {
+    loginBodySchema,
+    registerBodySchema,
+    type TLoginData,
+    type TRegisterData
+} from "../schema/request/auth.schema.ts";
+import {login, logout, refresh, register} from "../service/auth.service.ts";
 import {emptyResponse, successResponse} from "../helper/response.helper.ts";
 import {UnauthenticatedError} from "../error/response/unauthenticated.error.ts";
 import type {AppRequest} from "../types";
+import {StatusCodes} from "http-status-codes";
 
 // Name of the refresh token cookie.
 const APP_AUTH_COOKIE = process.env.APP_AUTH_COOKIE || '__auth';
@@ -25,6 +31,18 @@ authController.post(
         successResponse(res, { access_token: tokenPair.access });
     }
 );
+
+/**
+ * Register new authentication profile to the application.
+ */
+authController.post(
+    '/registration', bodyValidator(registerBodySchema),
+    (req: AppRequest<never,never,TRegisterData>, res: Response) => {
+        register(req.body).then(
+            () => successResponse(res, { message: 'OK' }, StatusCodes.CREATED)
+        );
+    }
+)
 
 /**
  * Refreshes user's JWT auth token based on their refresh token cookie.

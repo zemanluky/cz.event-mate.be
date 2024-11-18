@@ -1,8 +1,9 @@
 import type {Request, Response} from "express";
-import type {ZodRawShape} from "zod";
+import {z, type ZodRawShape} from "zod";
 import {ZodError, ZodObject} from "zod";
 import type {NextFunction} from "express";
 import {ValidationError} from "../error/response/validation.error.ts";
+import type {AppRequest} from "../types";
 
 /**
  * Validates the body of a request.
@@ -11,7 +12,7 @@ import {ValidationError} from "../error/response/validation.error.ts";
  * @param schema The schema to use for validation.
  */
 export function bodyValidator<T extends ZodRawShape>(schema: ZodObject<T>) {
-    return (req: Request, res: Response, next: NextFunction) => {
+    return (req: AppRequest, res: Response, next: NextFunction) => {
         // try parsing the request body
         try {
             req.body = schema.parse(req.body);
@@ -36,10 +37,10 @@ export function bodyValidator<T extends ZodRawShape>(schema: ZodObject<T>) {
  * @param schema
  */
 export function queryValidator<T extends ZodRawShape>(schema: ZodObject<T>) {
-    return (req: Request, res: Response, next: NextFunction) => {
+    return (req: AppRequest<never,z.infer<ZodObject<T>>>, res: Response, next: NextFunction) => {
         // try parsing the request query
         try {
-            req.query = schema.parse(req.query);
+            req.parsedQuery = schema.parse(req.query);
             next();
         }
         // catch invalid object or validation errors
@@ -61,10 +62,10 @@ export function queryValidator<T extends ZodRawShape>(schema: ZodObject<T>) {
  * @param schema
  */
 export function paramValidator<T extends ZodRawShape>(schema: ZodObject<T>) {
-    return (req: Request, res: Response, next: NextFunction) => {
+    return (req: AppRequest<z.infer<ZodObject<T>>>, res: Response, next: NextFunction) => {
         // try parsing the request parameters
         try {
-            req.params = schema.parse(req.params);
+            req.parsedParams = schema.parse(req.params);
             next();
         }
         // catch invalid object or validation errors

@@ -25,6 +25,8 @@ type ValidationResponse = ErrorResponse & {
     validation: ZodIssue[]
 }
 
+export type TResponse<TData = any> = SuccessResponse<TData>|ErrorResponse|ValidationResponse;
+
 /**
  * Sends a success response with data.
  * @param res The response object.

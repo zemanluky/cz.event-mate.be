@@ -9,6 +9,9 @@ import type {AppRequest} from "../types";
  */
 export function loginGuard() {
 	return (req: AppRequest, res: Response, next: NextFunction) => {
+		// the request is already authenticated - used by microservice
+		if (req.isMicroserviceRequest === true) return next();
+
 		const authHeader = req.headers.authorization;
 
 		if (!authHeader || !authHeader.startsWith('Bearer ')) {

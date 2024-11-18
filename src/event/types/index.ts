@@ -14,6 +14,7 @@ export interface AppRequest<
 > extends Request<Record<string,string>,TResBody,TBody extends undefined ? {} : TBody,Record<string,string>,TLocals> {
     parsedParams?: TParams,
     parsedQuery?: TQuery,
+    isMicroserviceRequest?: boolean,
     user?: {
         id: string,
         role: EUserRole

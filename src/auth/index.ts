@@ -3,6 +3,8 @@ import {errorHandler} from "./helper/error.handler.ts";
 import {connectToMongo} from "./helper/mongo.connector.ts";
 import {googleAuthController} from './controller/google-auth.controller.ts';
 import {authController} from "./controller/auth.controller.ts";
+import {NotFoundError} from "./error/response/not-found.error.ts";
+import cookieParser from "cookie-parser";
 
 const port = process.env.APP_PORT;
 const appName = process.env.APP_NAME || 'unknown';
@@ -18,11 +20,17 @@ const app = express();
 
 // parse json body
 app.use(express.json());
+app.use(cookieParser());
 
 // add controllers here...
 // remember, that this microservice is already prefixed /auth, so we shouldn't add another prefix here
 app.use('/google', googleAuthController);
 app.use('/', authController);
+
+// global handler for 404
+app.use((req, res, next) => {
+    next(new NotFoundError('Resource not found.', ''));
+});
 
 // global handler for app specified exceptions
 app.use(errorHandler);

@@ -4,11 +4,7 @@ import {EUserRole} from "../../types";
 
 export interface IAuth {
     // ID of the user. This ID must be the same as the ObjectID saved by the user microservice!
-    _id: string;
-    // The username of the user.
-    username: string;
-    // The email of the user.
-    email: string;
+    _id: Types.ObjectId;
     // The hashed password.
     password: string;
     // Role of the authenticated user.
@@ -22,9 +18,7 @@ export type THydratedAuthDocument = HydratedDocument<IAuth & { refresh_tokens?: 
 type TAuthModel = Model<IAuth, {}, {}, {}, THydratedAuthDocument>
 
 const authSchema = new Schema<IAuth, TAuthModel>({
-    _id: { type: String, required: true },
-    username: { type: String, required: true, index: true, unique: true },
-    email: { type: String, required: true, index: true, unique: true },
+    _id: Types.ObjectId,
     password: { type: String, required: true },
     role: { type: String, required: false, index: true, unique: true, default: EUserRole.User },
     refresh_tokens: { type: [authRefreshTokenSchema], index: true, unique: true, default: [] },

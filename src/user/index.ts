@@ -1,7 +1,8 @@
 import express from 'express';
-import {helloWorldController} from "./controller/hello-world.controller.ts";
 import {errorHandler} from "./helper/error.handler.ts";
 import {connectToMongo} from "./helper/mongo.connector.ts";
+import {userManagementController} from "./controller/user-management.controller.ts";
+import {NotFoundError} from "./error/response/not-found.error.ts";
 
 const port = process.env.APP_PORT;
 const appName = process.env.APP_NAME || 'unknown';
@@ -19,8 +20,12 @@ const app = express();
 app.use(express.json());
 
 // add controllers here...
-app.use('/hello', helloWorldController);
+app.use('/', userManagementController);
 
+// global handler for 404
+app.use((req, res, next) => {
+    next(new NotFoundError('Resource not found.', ''));
+});
 // global handler for app specified exceptions
 app.use(errorHandler);
 

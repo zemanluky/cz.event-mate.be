@@ -40,6 +40,7 @@ services:
       MS_USER_URL: http://ms_user:${MS_USER_PORT}/
       MS_EVENT_URL: http://ms_event:${MS_EVENT_PORT}/
       MONGO_DSN: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/${MS_AUTH_DB}?authSource=admin
+      MICROSERVICE_SECRET: ${MICROSERVICE_SECRET}
 
   # user microservice
   ms_user:
@@ -56,6 +57,7 @@ services:
       MS_AUTH_URL: http://ms_auth:${MS_AUTH_PORT}/
       MS_EVENT_URL: http://ms_event:${MS_EVENT_PORT}/
       MONGO_DSN: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/${MS_USER_DB}?authSource=admin
+      MICROSERVICE_SECRET: ${MICROSERVICE_SECRET}
 
   # event microservice
   ms_event:
@@ -72,3 +74,4 @@ services:
       MS_AUTH_URL: http://ms_auth:${MS_AUTH_PORT}/
       MS_USER_URL: http://ms_user:${MS_USER_PORT}/
       MONGO_DSN: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/${MS_EVENT_DB}?authSource=admin
+      MICROSERVICE_SECRET: ${MICROSERVICE_SECRET}
