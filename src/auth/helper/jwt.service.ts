@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import jwt, {JsonWebTokenError, type JwtPayload, NotBeforeError, TokenExpiredError} from "jsonwebtoken";
 import {InvalidJwt} from "../error/invalid-jwt-token.error.ts";
-import type {EUserRole} from "../schema/db/auth.schema.ts";
+import type {EUserRole} from "../types";
 
 const issuer = process.env.JWT_ISSUER || 'event-mate:auth';
 

@@ -1,10 +1,6 @@
 import {type HydratedDocument, type InferRawDocType, model, type Model, Schema, Types} from "mongoose";
 import {type IAuthRefreshToken, authRefreshTokenSchema} from "./auth-refresh-token.schema.ts";
-
-export enum EUserRole {
-    Admin = 'admin',
-    User = 'user'
-}
+import {EUserRole} from "../../types";
 
 export interface IAuth {
     // ID of the user. This ID must be the same as the ObjectID saved by the user microservice!

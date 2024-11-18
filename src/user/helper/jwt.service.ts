@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import jwt, {JsonWebTokenError, type JwtPayload, NotBeforeError, TokenExpiredError} from "jsonwebtoken";
 import {InvalidJwt} from "../error/invalid-jwt-token.error.ts";
+import type {EUserRole} from "../types";
 
 const issuer = process.env.JWT_ISSUER || 'event-mate:auth';
 
@@ -25,7 +26,7 @@ const getPublicKey = (): Buffer => {
  * @param jwtString
  * @throws InvalidJwt The given token is invalid - trying to authenticate with invalid token.
  */
-export const verifyJwt = (jwtString: string): { userId: string, jti?: string} => {
+export const verifyJwt = (jwtString: string): { userId: string, role: EUserRole, jti?: string} => {
     const keyFile = getPublicKey();
 
     try {
@@ -35,10 +36,10 @@ export const verifyJwt = (jwtString: string): { userId: string, jti?: string} =>
             issuer: [issuer]
         }) as JwtPayload;
 
-        if (payload.uid === undefined)
+        if (payload.uid === undefined || payload.role === undefined)
             throw new InvalidJwt('The provided JWT token is invalid.');
 
-        return { userId: payload.uid, jti: payload.jti };
+        return { userId: payload.uid, role: payload.role, jti: payload.jti };
     }
     catch (error: any) {
         // we know what the error is, the user is trying to authenticate with invalid jwt
