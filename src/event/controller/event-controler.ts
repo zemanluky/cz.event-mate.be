@@ -6,7 +6,6 @@ export const eventController = express.Router();
 
 eventController.get('/',
     async (req, res) => {// all events showable to the user
-
         if(!req.query.userId || !req.query.pageSize || !req.query.pageNumber){
             throw new BadRequestError('Missing query parameters', 'userId, pageSize, pageNumber');
         }

@@ -4,9 +4,9 @@ import {bodyValidator} from "../helper/request.validator.ts";
 import {findById, saveFromApi} from "../service/foo.service.ts";
 import {microserviceUrl} from "../helper/microservice.url.ts";
 
-export const googleController = express.Router();
+export const googleAuthController = express.Router();
 
-googleController.get('/goog', async (req: Request, res: Response) => {
+googleAuthController.get('/goog', async (req: Request, res: Response) => {
     const response = await fetch(microserviceUrl('user', 'hello'));
     const greeting = await response.text();
 

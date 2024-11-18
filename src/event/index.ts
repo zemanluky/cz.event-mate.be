@@ -1,5 +1,4 @@
 import express from 'express';
-import {helloWorldController} from "./controller/hello-world.controller.ts";
 import {errorHandler} from "./helper/error.handler.ts";
 import {connectToMongo} from "./helper/mongo.connector.ts";
 import { eventController } from './controller/event-controler.ts';
@@ -20,7 +19,6 @@ const app = express();
 app.use(express.json());
 
 // add controllers here...
-app.use('/hello', helloWorldController);
 app.use('/event', eventController);
 
 // global handler for app specified exceptions

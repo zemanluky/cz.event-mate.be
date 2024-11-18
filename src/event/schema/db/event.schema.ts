@@ -11,13 +11,9 @@ export interface IEvent {
     ownerId: mongoose.Types.ObjectId;
 }
 
-interface IEventsMethods {
-    fullName: () => string
-}
+type TEventModel = Model<IEvent>;
 
-type TEventModel = Model<IEvent, {}, IEventsMethods>;
-
-const eventSchema = new Schema<IEvent, TEventModel, IEventsMethods>({
+const eventSchema = new Schema<IEvent, TEventModel>({
     name: { type: String, required: true },
     description: { type: String, required: false },
     date: { type: Date, required: true },
@@ -26,5 +22,4 @@ const eventSchema = new Schema<IEvent, TEventModel, IEventsMethods>({
 });
 
 export const Event = model<IEvent, TEventModel>('Event', eventSchema);
-  
 export type TEvent = InferRawDocType<typeof eventSchema>;
