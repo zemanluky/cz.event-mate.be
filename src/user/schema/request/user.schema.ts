@@ -30,8 +30,10 @@ export const verifyAvailabilityQuerySchema = z.object({
 export const identityByEmailParamSchema = z.object({ email: z.string().email() });
 
 export const userIdParamSchema = z.object({
-    id: z.string().length(24, "Invalid user ID format")
+    id: z.string().uuid(),
 });
+
+
 
 
 export type TRegistrationData = z.infer<typeof registerUserBodySchema>;

@@ -15,12 +15,13 @@ import {
     registerUser,
     updateProfile
 } from "../service/user-management.service.ts";
-import {successResponse} from "../helper/response.helper.ts";
+import {errorResponse, successResponse} from "../helper/response.helper.ts";
 import {StatusCodes} from "http-status-codes";
 import {microserviceGuard} from "../helper/microservice.url.ts";
 import * as R from 'remeda';
 import {getUser} from "../service/user.service.ts";
-import {userIdParamSchema} from "../schema/request/user.schema.ts"
+import { getUserRatings } from "../service/user-management.service.ts"; // Importujeme novou funkci
+import { userIdParamSchema } from "../schema/request/user.schema.ts"; // Importujeme validátor
 
 export const userManagementController = express.Router();
 
@@ -88,5 +89,24 @@ userManagementController.get(
     async (req: AppRequest<TIdentityByEmailParams>, res: Response) => {
         const user = await getUser(req.parsedParams!.email);  //user callback function
         successResponse(res, user);
+    }
+);
+
+/**
+ * Gets user rating by their ID.
+ */
+
+userManagementController.get(
+    "/user/:id/rating",
+    paramValidator(userIdParamSchema), //validator
+    async (req: AppRequest<{ id: string }>, res: Response) => {
+        try {
+            const userId = req.parsedParams!.id;
+            const ratings = await getUserRatings(userId);
+            successResponse(res, { ratings });
+        } catch (error) {
+            console.error(error);
+            errorResponse(res, "Failed to retrieve user ratings", StatusCodes.INTERNAL_SERVER_ERROR, "user_rating_fetch_error");
+        }
     }
 );
