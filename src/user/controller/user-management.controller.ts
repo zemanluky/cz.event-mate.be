@@ -78,3 +78,14 @@ userManagementController.get(
         successResponse(res, R.omit(user, ['friends', 'profile_picture_path']));
     }
 );
+
+/**
+ * Gets user by their ID.
+ */
+userManagementController.get(
+    '/user/:id', paramValidator(identityByEmailParamSchema),  //id validation
+    async (req: AppRequest<TIdentityByEmailParams>, res: Response) => {
+        const user = await getUser(req.parsedParams!.email);  //user callback function
+        successResponse(res, user);
+    }
+);
