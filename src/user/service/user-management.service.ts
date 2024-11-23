@@ -1,5 +1,5 @@
 import type {TAvailabilityQuery, TRegistrationData, TUpdateUserData} from "../schema/request/user.schema.ts";
-import {type THydratedUserDocument, User} from "../schema/db/user.schema.ts";
+import {type THydratedUserDocument, User, type IUser} from "../schema/db/user.schema.ts";
 import {getFetchHeaders, microserviceUrl} from "../helper/microservice.url.ts";
 import type {TResponse} from "../helper/response.helper.ts";
 import {ServerError} from "../error/response/server.error.ts";
@@ -10,6 +10,22 @@ type TAvailabilityPair = {
     email?: boolean;
     username?: boolean;
 }
+
+// user-management.service.ts
+
+/**
+ * Gets a user by their ID.
+ * @param id
+ */
+export async function getUser(id: string): Promise<IUser> {
+    const user = await User.findById(id);
+
+    if (!user)
+        throw new NotFoundError(`Could not find user with ID: ${id}.`, 'user');
+
+    return user.toObject();
+}
+
 
 /**
  * Gets the identity of a user by their email.
