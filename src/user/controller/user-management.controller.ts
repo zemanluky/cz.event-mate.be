@@ -78,3 +78,4 @@ userManagementController.get(
         successResponse(res, R.omit(user, ['friends', 'profile_picture_path']));
     }
 );
+
