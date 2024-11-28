@@ -74,8 +74,7 @@ userManagementController.put(
 userManagementController.get(
     '/profile', microserviceGuard(false), loginGuard(),
     async (req: AppRequest, res: Response) => {
-        console.error(req.query.userId)
         const user = req.isMicroserviceRequest ? await getUser(req.query.userId) : await getUser(req.user!.id);
-        successResponse(res, R.omit(user, ['friends', 'profile_picture_path']));
+        successResponse(res, R.omit(user, ['profile_picture_path']));
     }
 );

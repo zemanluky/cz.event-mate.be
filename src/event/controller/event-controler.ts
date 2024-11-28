@@ -27,19 +27,13 @@ eventController.get('/friends',
         const pageSize = Number(req.query.pageSize);
         const pageNumber = Number(req.query.pageNumber);
 
-        console.log('Fetching events created by friends of the user', pageSize, pageNumber, microserviceUrl('user','/profile/', req.user!.id));
-
-
         const userProfile = await fetch(microserviceUrl('user','profile', {userId: req.user!.id}), {
             headers: getFetchHeaders(),
-            // method: 'GET',
         }).then((response) => {
             return response.json();
         }) 
 
-        console.log('User profile', userProfile);
-
-        const event = Event.find({"ownerId" : {"$in" : userProfile.friends}}).limit(Number(pageSize)).skip(Number(pageSize) * Number(pageNumber)).exec();
+        const event = Event.find({"ownerId" : {"$in" : userProfile.data.friends}}).limit(Number(pageSize)).skip(Number(pageSize) * Number(pageNumber)).exec();
         event.then((events) => {
             res.send(events);
         });
