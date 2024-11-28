@@ -1,7 +1,7 @@
 import express, {type Request, type Response} from "express";
 import { Event } from "../schema/db/event.schema";
 import { queryValidator } from "../helper/request.validator";
-import { allEventsValidator, friendsEventsValidator } from "../schema/request/event.schema";
+import { allEventsValidator, friendsEventsValidator, userEventsValidator } from "../schema/request/event.schema";
 import { loginGuard } from "../helper/login-guard";
 import { getFetchHeaders, microserviceUrl } from "../helper/microservice.url";
 import type { AppRequest } from "../types";
@@ -34,6 +34,21 @@ eventController.get('/friends',
         }) 
 
         const event = Event.find({"ownerId" : {"$in" : userProfile.data.friends}}).limit(Number(pageSize)).skip(Number(pageSize) * Number(pageNumber)).exec();
+        event.then((events) => {
+            res.send(events);
+        });
+});
+
+eventController.get('/user',
+    queryValidator(userEventsValidator),
+    loginGuard(),
+    async (req, res) => {// all events of user
+
+        const userId = req.query.userId;
+        const pageSize = Number(req.query.pageSize);
+        const pageNumber = Number(req.query.pageNumber);
+
+        const event = Event.find({"ownerId": userId}).limit(Number(pageSize)).skip(Number(pageSize) * Number(pageNumber)).exec();
         event.then((events) => {
             res.send(events);
         });
