@@ -33,6 +33,12 @@ export const userIdParamSchema = z.object({
     id: z.string().uuid(),
 });
 
+export const friendRequestQuerySchema = z.object({
+    userId: z.string().min(0,"User ID is required."),
+});
+export type TFriendRequestQuery = z.infer<typeof friendRequestQuerySchema>;
+
+
 
 
 
