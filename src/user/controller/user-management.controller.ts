@@ -20,8 +20,8 @@ import {StatusCodes} from "http-status-codes";
 import {microserviceGuard} from "../helper/microservice.url.ts";
 import * as R from 'remeda';
 import {getUser} from "../service/user.service.ts";
-import { getUserRatings } from "../service/user-management.service.ts"; // Importujeme novou funkci
-import { userIdParamSchema } from "../schema/request/user.schema.ts"; // Importujeme validátor
+import { getUserRatings } from "../service/user-management.service.ts";
+import { userIdParamSchema } from "../schema/request/user.schema.ts";
 
 export const userManagementController = express.Router();
 

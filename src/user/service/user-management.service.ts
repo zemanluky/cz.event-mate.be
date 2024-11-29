@@ -6,6 +6,7 @@ import { ServerError } from "../error/response/server.error.ts";
 import { BadRequestError } from "../error/response/bad-request.error.ts";
 import { NotFoundError } from "../error/response/not-found.error.ts";
 import type { IUserRating } from "../schema/db/rating.schema.ts";
+import { FriendRequest } from "../schema/db/friend-request.schema.ts";
 
 type TAvailabilityPair = {
     email?: boolean;
@@ -114,6 +115,20 @@ export async function registerUser(data: TRegistrationData): Promise<THydratedUs
 }
 
 /**
+ * Fetches friend requests for a specific user.
+ * @param userId The ID of the user.
+ */
+export async function getFriendRequests(userId: string) {
+    const friendRequests = await FriendRequest.find({ receiver: userId }).populate("sender", "name username").exec();
+
+    if (!friendRequests.length) {
+        throw new NotFoundError(`No friend requests found for user with ID: ${userId}.`, "friend_request");
+    }
+
+    return friendRequests.map((request) => request.toObject());
+}
+
+/**
  * @param data
  * @param id
  */
@@ -133,6 +148,8 @@ export async function updateProfile(data: TUpdateUserData, id: string): Promise<
 
         user.username = data.username;
     }
+
+    
 
     user.bio = data.bio || null;
     user.name = data.name;
