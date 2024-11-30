@@ -5,7 +5,7 @@ import {
     registerUserBodySchema, type TAvailabilityQuery, type TIdentityByEmailParams,
     type TRegistrationData,
     type TUpdateUserData,
-    updateUserSchema, verifyAvailabilityQuerySchema
+    updateUserSchema, verifyAvailabilityQuerySchema, type TFriendRequestQuery
 } from "../schema/request/user.schema.ts";
 import {loginGuard} from "../helper/login-guard.ts";
 import {bodyValidator, paramValidator, queryValidator} from "../helper/request.validator.ts";
@@ -22,6 +22,8 @@ import * as R from 'remeda';
 import {getUser} from "../service/user.service.ts";
 import { getUserRatings } from "../service/user-management.service.ts";
 import { userIdParamSchema } from "../schema/request/user.schema.ts";
+import { friendRequestQuerySchema } from "../schema/request/user.schema.ts";
+import { getFriendRequests } from "../service/user-management.service.ts";
 
 export const userManagementController = express.Router();
 
@@ -107,6 +109,24 @@ userManagementController.get(
         } catch (error) {
             console.error(error);
             errorResponse(res, "Failed to retrieve user ratings", StatusCodes.INTERNAL_SERVER_ERROR, "user_rating_fetch_error");
+        }
+    }
+);
+
+/**
+ * Gets user friend-request by their ID.
+ */
+
+userManagementController.get(
+    '/friend-request',
+    queryValidator(friendRequestQuerySchema),
+    async (req: AppRequest<never, TFriendRequestQuery>, res: Response) => {
+        try {
+            const { userId } = req.parsedQuery;
+            const friendRequests = await getFriendRequests(userId);
+            successResponse(res, friendRequests, StatusCodes.OK);
+        } catch (error) {
+           
         }
     }
 );
