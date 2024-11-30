@@ -24,6 +24,7 @@ import { getUserRatings } from "../service/user-management.service.ts";
 import { userIdParamSchema } from "../schema/request/user.schema.ts";
 import { friendRequestQuerySchema } from "../schema/request/user.schema.ts";
 import { getFriendRequests } from "../service/user-management.service.ts";
+import {BadRequestError} from "../error/response/bad-request.error.ts"
 
 export const userManagementController = express.Router();
 
@@ -114,7 +115,7 @@ userManagementController.get(
 );
 
 /**
- * Gets user friend-request by their ID.
+ * Gets user friend-request
  */
 
 userManagementController.get(
@@ -127,7 +128,11 @@ userManagementController.get(
             successResponse(res, friendRequests, StatusCodes.OK);
         } catch (error) {
             console.error(error);
-            errorResponse(res, "Failed to retrieve friend requests", StatusCodes.INTERNAL_SERVER_ERROR, "friend_request_fetch_error");
+            const badRequestError = new BadRequestError(
+                "Failed to retrieve friend requests",
+                "friend_request_fetch_error"
+            );
+            errorResponse(res, badRequestError.message, badRequestError._httpCode, badRequestError._errorCode);
         }
     }
 );
