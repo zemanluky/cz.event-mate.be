@@ -122,11 +122,12 @@ userManagementController.get(
     queryValidator(friendRequestQuerySchema),
     async (req: AppRequest<never, TFriendRequestQuery>, res: Response) => {
         try {
-            const { userId } = req.parsedQuery;
+            const { userId } = req.parsedQuery!;
             const friendRequests = await getFriendRequests(userId);
             successResponse(res, friendRequests, StatusCodes.OK);
         } catch (error) {
-           
+            console.error(error);
+            errorResponse(res, "Failed to retrieve friend requests", StatusCodes.INTERNAL_SERVER_ERROR, "friend_request_fetch_error");
         }
     }
 );
