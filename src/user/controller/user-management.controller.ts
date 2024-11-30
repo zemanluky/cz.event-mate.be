@@ -132,7 +132,7 @@ userManagementController.get(
                 "Failed to retrieve friend requests",
                 "friend_request_fetch_error"
             );
-            errorResponse(res, badRequestError.message, badRequestError._httpCode, badRequestError._errorCode);
+            errorResponse(res, badRequestError.message, badRequestError.httpCode, badRequestError.errorCode);
         }
     }
 );
