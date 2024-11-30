@@ -90,10 +90,20 @@ userManagementController.get(
  * Gets user by their ID.
  */
 userManagementController.get(
-    '/user/:id', paramValidator(identityByEmailParamSchema),  //id validation
+    '/user/:id', paramValidator(identityByEmailParamSchema),
     async (req: AppRequest<TIdentityByEmailParams>, res: Response) => {
-        const user = await getUser(req.parsedParams!.email);  //user callback function
-        successResponse(res, user);
+        try{
+            const user = await getUser(req.parsedParams!.email); 
+            successResponse(res, user);
+        } catch (error){
+            console.log(error);
+            const notFoundError = new NotFoundError(
+                "Failed to find user",
+                "user_fetch_error"
+            );
+            errorResponse(res, notFoundError.message, notFoundError.httpCode, notFoundError.errorCode);
+
+        }
     }
 );
 
