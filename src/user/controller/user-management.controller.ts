@@ -25,6 +25,8 @@ import { userIdParamSchema } from "../schema/request/user.schema.ts";
 import { friendRequestQuerySchema } from "../schema/request/user.schema.ts";
 import { getFriendRequests } from "../service/user-management.service.ts";
 import {BadRequestError} from "../error/response/bad-request.error.ts"
+import { NotFoundError } from "../error/response/not-found.error.ts"
+
 
 export const userManagementController = express.Router();
 
@@ -109,7 +111,11 @@ userManagementController.get(
             successResponse(res, { ratings });
         } catch (error) {
             console.error(error);
-            errorResponse(res, "Failed to retrieve user ratings", StatusCodes.INTERNAL_SERVER_ERROR, "user_rating_fetch_error");
+            const notFoundError = new NotFoundError(
+                "Failed to find user-raiting",
+                "user_raiting_fetch_error"
+            );
+            errorResponse(res, notFoundError.message, notFoundError.httpCode, notFoundError.errorCode);
         }
     }
 );
