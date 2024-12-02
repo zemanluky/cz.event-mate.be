@@ -14,6 +14,14 @@ type TAvailabilityPair = {
 };
 
 /**
+ * Gets the count of pending friend requests for a specific user.
+ * @param userId - The ID of the user.
+ */
+export async function getFriendRequestCount(userId: string): Promise<number> {
+    return await FriendRequest.countDocuments({ receiver: userId, state: 'pending' });
+}
+
+/**
  * Gets the ratings of a specific user by their ID.
  * @param userId The ID of the user whose ratings will be fetched.
  */
