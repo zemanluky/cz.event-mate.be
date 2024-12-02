@@ -152,3 +152,18 @@ userManagementController.get(
         }
     }
 );
+
+userManagementController.get(
+    '/friend-request/count', loginGuard(),
+    async (req: AppRequest, res: Response) => {
+        try {
+            const userId = req.user?.id;
+            if (!userId) throw new BadRequestError('User ID is required.');
+            const count = await getFriendRequestCount(userId);
+            successResponse(res, { count });
+        } catch (error) {
+            console.error(error);
+            errorResponse(res, error.message, StatusCodes.INTERNAL_SERVER_ERROR);
+        }
+    }
+);
