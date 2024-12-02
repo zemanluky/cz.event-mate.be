@@ -5,6 +5,7 @@ import { allEventsValidator, filterEventsValidator, friendsEventsValidator, user
 import { loginGuard } from "../helper/login-guard";
 import { getFetchHeaders, microserviceUrl } from "../helper/microservice.url";
 import type { AppRequest } from "../types";
+import { date } from "zod";
 
 export const eventController = express.Router();
 
@@ -66,7 +67,7 @@ eventController.get('/filter',
         const range = Number(req.query.range) || Number.MAX_SAFE_INTEGER;
 
         const dateStart =  req.query.dateStart || new Date(0);
-        const dateEnd = req.query.dateEnd || new Date(Number.MAX_SAFE_INTEGER);
+        const dateEnd = req.query.dateEnd || new Date(8640000000000000);
 
         const type = req.query.type || "";
 
@@ -123,7 +124,7 @@ eventController.get('/filter',
               $match: {
                 distance: { $lte: range},
                 date: { $gte: dateStart, $lte: dateEnd},
-                category: { $eq: type}
+                category: type
               }
             }
           ]).limit(Number(pageSize)).skip(Number(pageSize) * Number(pageNumber)).exec();
