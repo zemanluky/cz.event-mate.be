@@ -11,6 +11,7 @@ import {loginGuard} from "../helper/login-guard.ts";
 import {bodyValidator, paramValidator, queryValidator} from "../helper/request.validator.ts";
 import {
     checkAvailability,
+    getFriendRequestCount,
     getIdentityByEmail,
     registerUser,
     updateProfile
@@ -158,12 +159,17 @@ userManagementController.get(
     async (req: AppRequest, res: Response) => {
         try {
             const userId = req.user?.id;
-            if (!userId) throw new BadRequestError('User ID is required.');
+            if (!userId) {
+                throw new Error("User ID is missing");
+            }
             const count = await getFriendRequestCount(userId);
-            successResponse(res, { count });
         } catch (error) {
             console.error(error);
-            errorResponse(res, error.message, StatusCodes.INTERNAL_SERVER_ERROR);
+            const badRequestError = new BadRequestError(
+                "Failed to retrieve friend requests",
+                "friend_request_fetch_error"
+            );
+            errorResponse(res, badRequestError.message, badRequestError.httpCode, badRequestError.errorCode);
         }
     }
 );
