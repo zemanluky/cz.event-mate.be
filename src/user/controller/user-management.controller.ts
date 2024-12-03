@@ -20,6 +20,8 @@ import {StatusCodes} from "http-status-codes";
 import {microserviceGuard} from "../helper/microservice.url.ts";
 import * as R from 'remeda';
 import {getUser} from "../service/user.service.ts";
+import { createFriendRequest } from "../service/friend-request.ts";
+import { friendRequestValidator } from "../schema/request/friend-request.schema.ts";
 
 export const userManagementController = express.Router();
 
@@ -77,5 +79,20 @@ userManagementController.get(
         const user = await getUser(req.user!.id);
         successResponse(res, R.omit(user, ['friends', 'profile_picture_path']));
     }
+);
+
+// Create a friend request
+userManagementController.post("/:id/friend-request", loginGuard(), bodyValidator(friendRequestValidator),
+  async (req: AppRequest, res: Response) => {
+    const senderId = req.user!.id;
+    const receiverId = req.params.id;
+
+    try {
+      const friendRequest = await createFriendRequest(senderId, receiverId);
+      res.status(201).json(friendRequest);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create friend-request" });
+    }
+  }
 );
 
