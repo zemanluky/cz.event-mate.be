@@ -29,6 +29,19 @@ export const verifyAvailabilityQuerySchema = z.object({
 
 export const identityByEmailParamSchema = z.object({ email: z.string().email() });
 
+export const userIdParamSchema = z.object({
+    id: z.string().uuid(),
+});
+
+export const friendRequestQuerySchema = z.object({
+    userId: z.string().min(0,"User ID is required."),
+});
+export type TFriendRequestQuery = z.infer<typeof friendRequestQuerySchema>;
+
+
+
+
+
 export type TRegistrationData = z.infer<typeof registerUserBodySchema>;
 export type TUpdateUserData = z.infer<typeof updateUserSchema>;
 export type TAvailabilityQuery = z.infer<typeof verifyAvailabilityQuerySchema>;

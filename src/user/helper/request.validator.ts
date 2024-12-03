@@ -59,23 +59,27 @@ export function queryValidator<T extends ZodRawShape>(schema: ZodObject<T>) {
  * Validates the parameters in path of a given controller endpoint.
  * Use as a handler before the main controller endpoint handler.
  *
- * @param schema
+/**
+ * Middleware for validating request parameters using a Zod schema.
+ * @param schema Zod schema for request parameters validation.
  */
 export function paramValidator<T extends ZodRawShape>(schema: ZodObject<T>) {
-    return (req: AppRequest<z.infer<ZodObject<T>>>, res: Response, next: NextFunction) => {
-        // try parsing the request parameters
+    return (
+        req: AppRequest<z.infer<ZodObject<T>>>, 
+        res: Response, 
+        next: NextFunction
+    ) => {
         try {
+            // Parse and validate the request parameters
             req.parsedParams = schema.parse(req.params);
             next();
-        }
-        // catch invalid object or validation errors
-        catch (err: any) {
-            // when the error was thrown due to invalid properties
-            if (err instanceof ZodError)
-                next(new ValidationError(err.issues, 'params'));
-
-            // the error was thrown because we could not parse the object / unknown validation issues
-            next(new ValidationError(null, 'params'));
+        } catch (err: any) {
+            // Handle validation errors
+            if (err instanceof ZodError) {
+                next(new ValidationError(err.issues, "params"));
+            } else {
+                next(new ValidationError(null, "params"));
+            }
         }
     };
 }
