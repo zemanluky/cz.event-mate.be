@@ -3,6 +3,7 @@ import {errorHandler} from "./helper/error.handler.ts";
 import {connectToMongo} from "./helper/mongo.connector.ts";
 import {userManagementController} from "./controller/user-management.controller.ts";
 import {NotFoundError} from "./error/response/not-found.error.ts";
+import cors from "cors";
 
 const port = process.env.APP_PORT;
 const appName = process.env.APP_NAME || 'unknown';
@@ -17,6 +18,7 @@ await connectToMongo();
 const app = express();
 
 // parse json body
+app.use(cors({origin: true, credentials: true}));
 app.use(express.json());
 
 // add controllers here...

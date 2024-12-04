@@ -27,7 +27,7 @@ authController.post(
         const tokenPair = await login(req.body);
 
         // make the refresh token only accessible by the server (not by JS!)
-        res.cookie(APP_AUTH_COOKIE, tokenPair.refresh, { secure: true, httpOnly: true, path: '/auth' });
+        res.cookie(APP_AUTH_COOKIE, tokenPair.refresh, { secure: true, httpOnly: true, path: '/auth', sameSite: "none" });
         successResponse(res, { access_token: tokenPair.access });
     }
 );
@@ -56,7 +56,7 @@ authController.get('/refresh', async (req: AppRequest, res: Response) => {
     const tokenPair = await refresh(req.cookies[APP_AUTH_COOKIE]);
 
     // make the refresh token only accessible by the server (not by JS!)
-    res.cookie(APP_AUTH_COOKIE, tokenPair.refresh, { secure: true, httpOnly: true, path: '/auth' });
+    res.cookie(APP_AUTH_COOKIE, tokenPair.refresh, { secure: true, httpOnly: true, path: '/auth', sameSite: "none" });
     successResponse(res, { access_token: tokenPair.access });
 });
 
