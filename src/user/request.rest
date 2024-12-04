@@ -1,0 +1,16 @@
+###
+POST https://localhost/user/:id/friend-request
+
+###
+GET https://localhost/user/friend-request
+
+###
+POST https://localhost/user/friend-request
+Content-Type: application/json
+
+{
+    "name": "testFk3",
+    "description": "asdwq",
+    "location": "vazec",
+    "private": true
+}

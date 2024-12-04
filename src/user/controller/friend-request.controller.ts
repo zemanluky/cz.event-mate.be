@@ -12,12 +12,8 @@ friendRequestController.delete("/:requestId", loginGuard(),
     const userId = req.user!.id;
     const requestId = req.params.requestId;
 
-    try {
-      const result = await rejectFriendRequest(userId, requestId);
-      res.status(200).json({ message: result });
-    } catch (error) {
-      res.status(400).json({ message: "Failed to reject friend request" });
-    }
+	const result = await rejectFriendRequest(userId, requestId);
+	res.status(200).json({ message: result });
   }
 );
 
@@ -27,11 +23,7 @@ friendRequestController.patch("/:requestId/status", loginGuard(),
     const userId = req.user!.id; // Logged-in user
     const requestId = req.params.requestId;
 
-    try {
-      const result = await acceptFriendRequest(userId, requestId);
-      res.status(200).json({ message: "Friend request accepted successfully", result });
-    } catch (error) {
-      res.status(400).json({ message: "Failed to accept friend request" });
-    }
+	const result = await acceptFriendRequest(userId, requestId);
+	res.status(200).json({ message: "Friend request accepted successfully", result });
   }
 );

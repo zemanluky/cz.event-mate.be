@@ -87,12 +87,8 @@ userManagementController.post("/:id/friend-request", loginGuard(), bodyValidator
     const senderId = req.user!.id;
     const receiverId = req.params.id;
 
-    try {
-      const friendRequest = await createFriendRequest(senderId, receiverId);
-      res.status(201).json(friendRequest);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to create friend-request" });
-    }
+	const friendRequest = await createFriendRequest(senderId, receiverId);
+	res.status(201).json(friendRequest);
   }
 );
 

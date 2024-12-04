@@ -1,0 +1,28 @@
+###
+GET https://localhost/event/friends
+
+###
+GET https://localhost/event/6750294e0fd5c2dbf297436d/
+
+###
+POST https://localhost/event
+Content-Type: application/json
+
+{
+    "name": "testFk3",
+    "description": "asdwq",
+    "location": "vazec",
+    "private": true
+}
+
+###
+PUT https://localhost/event/67502388a969ff7097d60bd1
+Content-Type: application/json
+
+{
+    "name": "testFK2",
+    "description": "asdwq",
+    "location": "poprad",
+    "private": false,
+	"date": "2021-12-12T12:12:12",
+}
