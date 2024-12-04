@@ -27,7 +27,8 @@ import { friendRequestQuerySchema } from "../schema/request/user.schema.ts";
 import { getFriendRequests } from "../service/user-management.service.ts";
 import {BadRequestError} from "../error/response/bad-request.error.ts"
 import { NotFoundError } from "../error/response/not-found.error.ts"
-
+import { createFriendRequest } from "../service/friend-request.ts";
+import { friendRequestValidator } from "../schema/request/friend-request.schema.ts";
 
 export const userManagementController = express.Router();
 
@@ -87,6 +88,19 @@ userManagementController.get(
     }
 );
 
+// Create a friend request
+userManagementController.post("/:id/friend-request", loginGuard(), bodyValidator(friendRequestValidator),
+  async (req: AppRequest, res: Response) => {
+    const senderId = req.user!.id;
+    const receiverId = req.params.id;
+
+	const friendRequest = await createFriendRequest(senderId, receiverId);
+	res.status(201).json(friendRequest);
+  }
+);
+
+
+
 /**
  * Gets user by their ID.
  */
@@ -94,7 +108,7 @@ userManagementController.get(
     '/user/:id', paramValidator(identityByEmailParamSchema),
     async (req: AppRequest<TIdentityByEmailParams>, res: Response) => {
         try{
-            const user = await getUser(req.parsedParams!.email); 
+            const user = await getUser(req.parsedParams!.email);
             successResponse(res, user);
         } catch (error){
             console.log(error);

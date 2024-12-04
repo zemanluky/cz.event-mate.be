@@ -4,6 +4,7 @@ import {connectToMongo} from "./helper/mongo.connector.ts";
 import {userManagementController} from "./controller/user-management.controller.ts";
 import {NotFoundError} from "./error/response/not-found.error.ts";
 import cors from "cors";
+import { friendRequestController } from './controller/friend-request.controller.ts';
 
 const port = process.env.APP_PORT;
 const appName = process.env.APP_NAME || 'unknown';
@@ -22,7 +23,8 @@ app.use(cors({origin: true, credentials: true}));
 app.use(express.json());
 
 // add controllers here...
-app.use('/', userManagementController);
+app.use('/', userManagementController); // /user
+app.use('/friend-request', friendRequestController); // /user/friend-request
 
 // global handler for 404
 app.use((req, res, next) => {
