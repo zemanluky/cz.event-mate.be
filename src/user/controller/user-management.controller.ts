@@ -89,7 +89,7 @@ userManagementController.get(
 );
 
 // Create a friend request
-userManagementController.post("/:id/friend-request", loginGuard(), bodyValidator(friendRequestValidator),
+userManagementController.post("/:id/friend-request", loginGuard(),
   async (req: AppRequest, res: Response) => {
     const senderId = req.user!.id;
     const receiverId = req.params.id;
