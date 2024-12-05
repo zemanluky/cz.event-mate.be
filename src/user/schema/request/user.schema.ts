@@ -30,7 +30,7 @@ export const verifyAvailabilityQuerySchema = z.object({
 export const identityByEmailParamSchema = z.object({ email: z.string().email() });
 
 export const userIdParamSchema = z.object({
-    id: z.string().uuid(),
+    id: z.string()
 });
 
 export const friendRequestQuerySchema = z.object({
