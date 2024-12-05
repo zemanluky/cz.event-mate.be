@@ -94,18 +94,16 @@ userManagementController.get(
     '/user/:id', loginGuard(),
      paramValidator(userIdParamSchema),
     async (req: AppRequest<TIdentityByEmailParams>, res: Response) => {
-        try{
             const user = await getUser(req.parsedParams!.email); 
             successResponse(res, user);
-        } catch (error){
-            console.log(error);
+            if(!getUser){
             const notFoundError = new NotFoundError(
                 "Failed to find user",
                 "user_fetch_error"
             );
             errorResponse(res, notFoundError.message, notFoundError.httpCode, notFoundError.errorCode);
+            }
         }
-    }
 );
 
 /**
@@ -116,12 +114,10 @@ userManagementController.get(
     "/user/:id/rating", loginGuard(),
     paramValidator(userIdParamSchema), //validator
     async (req: AppRequest<{ id: string }>, res: Response) => {
-        try {
             const userId = req.parsedParams!.id;
             const ratings = await getUserRatings(userId);
             successResponse(res, { ratings });
-        } catch (error) {
-            console.error(error);
+            if(!getUserRatings){
             const notFoundError = new NotFoundError(
                 "Failed to find user-raiting",
                 "user_raiting_fetch_error"
@@ -139,32 +135,28 @@ userManagementController.get(
     '/friend-request', loginGuard(),
     queryValidator(friendRequestQuerySchema),
     async (req: AppRequest<never, TFriendRequestQuery>, res: Response) => {
-        try {
             const { userId } = req.parsedQuery!;
             const friendRequests = await getFriendRequests(userId);
             successResponse(res, friendRequests, StatusCodes.OK);
-        } catch (error) {
-            console.error(error);
+            if(!getFriendRequests){
             const badRequestError = new BadRequestError(
                 "Failed to retrieve friend requests",
                 "friend_request_fetch_error"
             );
             errorResponse(res, badRequestError.message, badRequestError.httpCode, badRequestError.errorCode);
+            }
         }
-    }
 );
 
 userManagementController.get(
     '/friend-request/count', loginGuard(),
     async (req: AppRequest, res: Response) => {
-        try {
             const userId = req.user?.id;
             if (!userId) {
                 throw new Error("User ID is missing");
             }
             const count = await getFriendRequestCount(userId);
-        } catch (error) {
-            console.error(error);
+            if(!getFriendRequestCount){
             const badRequestError = new BadRequestError(
                 "Failed to retrieve friend requests",
                 "friend_request_fetch_error"
