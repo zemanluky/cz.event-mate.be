@@ -92,7 +92,7 @@ userManagementController.get(
  */
 userManagementController.get(
     '/user/:id', loginGuard(),
-     paramValidator(identityByEmailParamSchema),
+     paramValidator(userIdParamSchema),
     async (req: AppRequest<TIdentityByEmailParams>, res: Response) => {
         try{
             const user = await getUser(req.parsedParams!.email); 
@@ -104,7 +104,6 @@ userManagementController.get(
                 "user_fetch_error"
             );
             errorResponse(res, notFoundError.message, notFoundError.httpCode, notFoundError.errorCode);
-
         }
     }
 );
