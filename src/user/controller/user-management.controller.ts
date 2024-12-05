@@ -19,7 +19,7 @@ import {successResponse} from "../helper/response.helper.ts";
 import {StatusCodes} from "http-status-codes";
 import {microserviceGuard} from "../helper/microservice.url.ts";
 import * as R from 'remeda';
-import {getUser} from "../service/user.service.ts";
+import {getAllUsers, getUser} from "../service/user.service.ts";
 
 export const userManagementController = express.Router();
 
@@ -76,5 +76,16 @@ userManagementController.get(
     async (req: AppRequest, res: Response) => {
         const user = req.isMicroserviceRequest ? await getUser(req.query.userId) : await getUser(req.user!.id);
         successResponse(res, R.omit(user, ['profile_picture_path']));
+    }
+);
+
+/**
+ * Gets all users.
+ */
+userManagementController.get(
+    '/all', microserviceGuard(),
+    async (req: AppRequest, res: Response) => {
+        const users = await getAllUsers();
+        successResponse(res, users);
     }
 );

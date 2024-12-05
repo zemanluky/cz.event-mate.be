@@ -13,3 +13,10 @@ export async function getUser(id: string): Promise<IUser> {
 
     return user.toObject();
 }
+
+/**
+ * Gets all users
+ */
+export async function getAllUsers(): Promise<IUser[]> {
+    return await User.find();
+}
