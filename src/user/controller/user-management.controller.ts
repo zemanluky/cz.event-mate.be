@@ -91,7 +91,8 @@ userManagementController.get(
  * Gets user by their ID.
  */
 userManagementController.get(
-    '/user/:id', paramValidator(identityByEmailParamSchema),
+    '/user/:id', loginGuard(),
+     paramValidator(identityByEmailParamSchema),
     async (req: AppRequest<TIdentityByEmailParams>, res: Response) => {
         try{
             const user = await getUser(req.parsedParams!.email); 
@@ -113,7 +114,7 @@ userManagementController.get(
  */
 
 userManagementController.get(
-    "/user/:id/rating",
+    "/user/:id/rating", loginGuard(),
     paramValidator(userIdParamSchema), //validator
     async (req: AppRequest<{ id: string }>, res: Response) => {
         try {
@@ -136,7 +137,7 @@ userManagementController.get(
  */
 
 userManagementController.get(
-    '/friend-request',
+    '/friend-request', loginGuard(),
     queryValidator(friendRequestQuerySchema),
     async (req: AppRequest<never, TFriendRequestQuery>, res: Response) => {
         try {
