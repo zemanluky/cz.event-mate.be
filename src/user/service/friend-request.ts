@@ -40,10 +40,16 @@ export async function rejectFriendRequest(userId: string, requestId: string): Pr
 	// Find the friend request
 	const friendRequest = await FriendRequest.findById(requestId);
   
+	// Check if the friend request exists
 	if (!friendRequest) {
 	  throw new NotFoundError("Friend request not found.", "friend_request_not_found");
 	}
-  
+	
+	// Check if the friend request was already accepted or rejected
+	if (friendRequest.state !== EFriendRequestState.Pending) {
+	  throw new BadRequestError("Friend request has already been accepted or rejected.", "request_already_handled");
+	}
+
 	// Check if the user is authorized to reject this friend request
 	if (friendRequest.receiver.toString() !== userId) {
 	  throw new UnauthenticatedError("You are not authorized to reject this friend request.");
@@ -60,8 +66,14 @@ export async function acceptFriendRequest(userId: string, requestId: string) {
 	// Find the friend request
 	const friendRequest = await FriendRequest.findById(requestId);
 
+	// Ensure the friend request exists
 	if (!friendRequest) {
 		throw new NotFoundError("Friend request not found.", "friend_request_not_found");
+	}
+
+	// Ensure the friend request is still pending
+	if (friendRequest.state !== EFriendRequestState.Pending) {
+		throw new BadRequestError("Friend request has already been accepted or rejected.", "request_already_handled");
 	}
 
 	// Ensure the user is the receiver of the request
