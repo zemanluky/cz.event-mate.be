@@ -5,21 +5,8 @@ import { Event } from "../schema/db/event.schema";
 import type { TFilterEventsValidator, TUserEventsValidator } from "../schema/request/event.schema";
 
 export async function getFilteredEvents(data: TFilterEventsValidator, userId: string) {
-    const location = data.location;
 
-    const dateStart = data.dateStart;
-    const dateEnd = data.dateEnd;
-
-    const requiredRating = Number(data.rating);
-
-    const type = data.type;
-
-    const friendsOnly = data.friendsOnly;
-
-    const publicOnly = data.publicOnly;
-
-    const pageSize = Number(data.pageSize);
-    const pageNumber = Number(data.pageNumber);
+    const { location, dateStart, dateEnd, rating, type, friendsOnly, publicOnly, pageSize, pageNumber } = data;
 
     let query = {};
 
@@ -37,7 +24,7 @@ export async function getFilteredEvents(data: TFilterEventsValidator, userId: st
         query = { ...query, date: { $lte: new Date(dateEnd) } };
     }
 
-    if (requiredRating) {
+    if (rating) {
         const allUsers = await fetch(microserviceUrl('user', 'all'), {
             headers: getFetchHeaders(),
         }).then((response) => {
@@ -49,7 +36,7 @@ export async function getFilteredEvents(data: TFilterEventsValidator, userId: st
             return acc;
         }, {});
 
-        query = { ...query, userRating: { $gte: requiredRating } };
+        query = { ...query, userRating: { $gte: rating } };
     }
 
     if (type) {
@@ -88,7 +75,7 @@ export async function getFilteredEvents(data: TFilterEventsValidator, userId: st
         {
             $match: query
         },
-    ]).limit(Number(pageSize)).skip(Number(pageSize) * Number(pageNumber)).exec();
+    ]).limit(pageSize).skip(pageSize * pageNumber).exec();
 
     if (!events) throw new NotFoundError('No events found', 'event');
 
@@ -96,11 +83,10 @@ export async function getFilteredEvents(data: TFilterEventsValidator, userId: st
 }
 
 export async function getUsersEvents(data: TUserEventsValidator) {
-    const userId = data.userId;
-    const pageSize = Number(data.pageSize);
-    const pageNumber = Number(data.pageNumber);
 
-    const events = Event.find({ "ownerId": userId }).limit(Number(pageSize)).skip(Number(pageSize) * Number(pageNumber)).exec();
+    const { userId, pageSize, pageNumber } = data
+
+    const events = Event.find({ "ownerId": userId }).limit(pageSize).skip(pageSize * pageNumber).exec();
 
     if (!events) throw new NotFoundError('No events found', 'event');
 
