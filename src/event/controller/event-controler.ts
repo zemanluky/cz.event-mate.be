@@ -7,31 +7,32 @@ import { bodyValidator, paramValidator } from "../helper/request.validator";
 import type { AppRequest } from "../types";
 import { eventSchema, idSchema } from "../schema/request/event.schema";
 import mongoose from "mongoose";
+import { queryValidator } from "../helper/request.validator";
+import { filterEventsValidator, userEventsValidator, type TFilterEventsValidator, type TUserEventsValidator } from "../schema/request/event.schema";
+import { getFilteredEvents, getUsersEvents, } from "../service/event.service.ts"
+import { successResponse } from "../helper/response.helper.ts";
+
 
 export const eventController = express.Router();
 
-eventController.get("/", async (req, res) => {
-  // all events showable to the user
-  if (!req.query.userId || !req.query.pageSize || !req.query.pageNumber) {
-    throw new BadRequestError(
-      "Missing query parameters",
-      "userId, pageSize, pageNumber"
-    );
-  }
+eventController.get('/',
+    queryValidator(filterEventsValidator),
+    loginGuard(),
+    async (req: AppRequest<never, never, TFilterEventsValidator>, res: Response) => {
 
-  const userId = req.query.userId;
-  const pageSize = req.query.pageSize;
-  const pageNumber = req.query.pageNumber;
+        const events = await getFilteredEvents(req.parsedQuery!, req.user!.id);
 
-  const event = Event.find()
-    .limit(Number(pageSize))
-    .skip(Number(pageSize) * Number(pageNumber))
-    .exec();
-  //TODO filter out private non-friend events
-  event.then((events) => {
-    res.send(events);
-  });
-});
+        successResponse(res, events);
+    });
+
+eventController.get('/user',
+    queryValidator(userEventsValidator),
+    loginGuard(),
+    async (req: AppRequest<never, never, TUserEventsValidator>, res: Response) => {
+
+        const events = await getUsersEvents(req.parsedQuery!);
+        successResponse(res, events);
+    });
 
 eventController.get("/friends", (req: Request, res: Response) => {
   // all events created by friends of the user
@@ -70,6 +71,6 @@ eventController.put("/:id", loginGuard(), bodyValidator(eventSchema), async (req
 // Not oficially part of the API, just for testing purposes
 eventController.get("/list-all", async (req: Request, res: Response) => {
 	const events = await Event.find();
-	
+
 	res.status(200).send(events);
 });

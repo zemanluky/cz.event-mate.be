@@ -20,7 +20,7 @@ import {errorResponse, successResponse} from "../helper/response.helper.ts";
 import {StatusCodes} from "http-status-codes";
 import {microserviceGuard} from "../helper/microservice.url.ts";
 import * as R from 'remeda';
-import {getUser} from "../service/user.service.ts";
+import {getAllUsers, getUser} from "../service/user.service.ts";
 import { getUserRatings } from "../service/user-management.service.ts";
 import { userIdParamSchema } from "../schema/request/user.schema.ts";
 import { friendRequestQuerySchema } from "../schema/request/user.schema.ts";
@@ -81,10 +81,21 @@ userManagementController.put(
  * Gets user's own user profile.
  */
 userManagementController.get(
-    '/profile', loginGuard(),
+    '/profile', microserviceGuard(false), loginGuard(),
     async (req: AppRequest, res: Response) => {
-        const user = await getUser(req.user!.id);
-        successResponse(res, R.omit(user, ['friends', 'profile_picture_path']));
+        const user = req.isMicroserviceRequest ? await getUser(req.query.userId) : await getUser(req.user!.id);
+        successResponse(res, R.omit(user, ['profile_picture_path']));
+    }
+);
+
+/**
+ * Gets all users.
+ */
+userManagementController.get(
+    '/all', microserviceGuard(),
+    async (req: AppRequest, res: Response) => {
+        const users = await getAllUsers();
+        successResponse(res, users);
     }
 );
 

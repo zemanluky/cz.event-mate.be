@@ -5,13 +5,33 @@ export const idSchema = z.string().refine((id) => mongoose.Types.ObjectId.isVali
   message: "Invalid ObjectId",
 });
 
-export const eventSchema = z.object({
-  _id: z.instanceof(mongoose.Types.ObjectId).optional(),
-  name: z.string().min(1, "Event name is required"),
-  description: z.string().optional(),
-  date: z.coerce.date().optional(),
-  location: z.string().min(1, "Location is required"),
-  private: z.boolean()
+export const userEventsValidator = z.object({
+    userId: z.string(), //id
+    pageSize: z.coerce.number(), //number
+    pageNumber: z.coerce.number() //number
 });
 
+export const eventSchema = z.object({
+    _id: z.instanceof(mongoose.Types.ObjectId).optional(),
+    name: z.string().min(1, "Event name is required"),
+    description: z.string().optional(),
+    date: z.coerce.date().optional(),
+    location: z.string().min(1, "Location is required"),
+    private: z.boolean()
+});
 export type TEvent = z.infer<typeof eventSchema>;
+
+export const filterEventsValidator = z.object({
+    location: z.string().optional(), //string
+    dateStart: z.coerce.date().optional(), //date
+    dateEnd: z.coerce.date().optional(), //date
+    rating: z.coerce.number().optional(), // number
+    type: z.string().optional(), //string
+    friendsOnly: z.coerce.boolean(), //boolean
+    publicOnly: z.coerce.boolean(), //boolean
+    pageSize: z.coerce.number(), //number
+    pageNumber: z.coerce.number() //number
+});
+
+export type TUserEventsValidator = z.infer<typeof userEventsValidator>;
+export type TFilterEventsValidator = z.infer<typeof filterEventsValidator>;
