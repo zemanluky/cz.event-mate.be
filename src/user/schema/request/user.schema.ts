@@ -1,4 +1,6 @@
 import {z} from "zod";
+import {zodObjectId} from "../../utils/validation.utils.ts";
+import {Types} from "mongoose";
 
 export const usernameValidator = z.string()
     .toLowerCase()
@@ -38,11 +40,21 @@ export const friendRequestQuerySchema = z.object({
 });
 export type TFriendRequestQuery = z.infer<typeof friendRequestQuerySchema>;
 
-
-
-
-
 export type TRegistrationData = z.infer<typeof registerUserBodySchema>;
 export type TUpdateUserData = z.infer<typeof updateUserSchema>;
 export type TAvailabilityQuery = z.infer<typeof verifyAvailabilityQuerySchema>;
 export type TIdentityByEmailParams = z.infer<typeof identityByEmailParamSchema>;
+
+export const authorsListQuerySchema = z.object({
+    authorIds: z.string()
+        .transform(val => val.split(','))
+        .pipe(
+            z.array(z.string().trim().pipe(zodObjectId).transform(val => new Types.ObjectId(val)))
+        )
+});
+export type TAuthorListQuery = z.infer<typeof authorsListQuerySchema>;
+
+export const userFriendListParamSchema = z.object({
+    id: z.string().trim().pipe(zodObjectId).transform(val => new Types.ObjectId(val))
+});
+export type TUserFriendListParams = z.infer<typeof userFriendListParamSchema>;

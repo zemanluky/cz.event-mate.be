@@ -1,7 +1,7 @@
 import express from 'express';
 import {errorHandler} from "./helper/error.handler.ts";
 import {connectToMongo} from "./helper/mongo.connector.ts";
-import { eventController } from './controller/event-controler.ts';
+import { eventController } from './controller/event.controller.ts';
 import {NotFoundError} from "./error/response/not-found.error.ts";
 import cors from "cors";
 

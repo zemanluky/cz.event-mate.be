@@ -1,37 +1,31 @@
 import { z } from "zod";
-import mongoose from "mongoose";
+import mongoose, {Types} from "mongoose";
+import {startOfToday} from "date-fns";
+import {zodObjectId} from "../../utils/validation.utils.ts";
 
 export const idSchema = z.string().refine((id) => mongoose.Types.ObjectId.isValid(id), {
   message: "Invalid ObjectId",
 });
 
-export const userEventsValidator = z.object({
-    userId: z.string(), //id
-    pageSize: z.coerce.number(), //number
-    pageNumber: z.coerce.number() //number
-});
-
 export const eventSchema = z.object({
-    _id: z.instanceof(mongoose.Types.ObjectId).optional(),
-    name: z.string().min(1, "Event name is required"),
-    description: z.string().optional(),
-    date: z.coerce.date().optional(),
-    location: z.string().min(1, "Location is required"),
+    name: z.string().trim().min(1),
+    description: z.string().nullable().optional(),
+    date: z.coerce.date().min(startOfToday()),
+    location: z.string().trim().min(1),
     private: z.boolean()
 });
-export type TEvent = z.infer<typeof eventSchema>;
+export type TEventBody = z.infer<typeof eventSchema>;
 
 export const filterEventsValidator = z.object({
+    userId: z.string().optional(),
     location: z.string().optional(), //string
     dateStart: z.coerce.date().optional(), //date
     dateEnd: z.coerce.date().optional(), //date
     rating: z.coerce.number().optional(), // number
-    type: z.string().optional(), //string
-    friendsOnly: z.coerce.boolean(), //boolean
-    publicOnly: z.coerce.boolean(), //boolean
-    pageSize: z.coerce.number(), //number
-    pageNumber: z.coerce.number() //number
+    category: z.string().pipe(zodObjectId).transform(val => new Types.ObjectId(val)).optional(), //string
+    filter: z.enum(['friends-only', 'public-only', 'all']).default('all'),
+    pageSize: z.coerce.number().min(1).default(25), //number
+    pageNumber: z.coerce.number().min(1).default(1) //number
 });
 
-export type TUserEventsValidator = z.infer<typeof userEventsValidator>;
 export type TFilterEventsValidator = z.infer<typeof filterEventsValidator>;

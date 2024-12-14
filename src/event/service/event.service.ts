@@ -1,94 +1,180 @@
-import mongoose from "mongoose";
+import mongoose, {Types} from "mongoose";
 import { NotFoundError } from "../error/response/not-found.error";
 import { getFetchHeaders, microserviceUrl } from "../helper/microservice.url";
-import { Event } from "../schema/db/event.schema";
-import type { TFilterEventsValidator, TUserEventsValidator } from "../schema/request/event.schema";
+import {Event, type IEvent, type THydratedEventDocument} from "../schema/db/event.schema";
+import type {TEventBody, TFilterEventsValidator} from "../schema/request/event.schema";
+import type {TResponse} from "../helper/response.helper.ts";
+import {ServerError} from "../error/response/server.error.ts";
+import {BadRequestError} from "../error/response/bad-request.error.ts";
+import {PermissionError} from "../error/response/permission.error.ts";
 
-export async function getFilteredEvents(data: TFilterEventsValidator, userId: string) {
+/**
+ * Gets a filtered and paginated list of events.
+ * @param queryFilter
+ * @param userId
+ */
+export async function getFilteredEvents(queryFilter: TFilterEventsValidator, userId: string) {
+    const { location, dateStart, dateEnd, rating, category, filter, pageSize, pageNumber, userId: authorId } = queryFilter;
 
-    const { location, dateStart, dateEnd, rating, type, friendsOnly, publicOnly, pageSize, pageNumber } = data;
+    // fetch list of friends of the current user
+    const friendListResponse: TResponse<Array<string>> = await fetch(microserviceUrl('user', `${userId}/friend-list`), {
+        headers: getFetchHeaders(),
+    }).then((response) => {
+        return response.json();
+    });
 
-    let query = {};
+    if (!friendListResponse.success)
+        throw new ServerError(`Failed to fetch friend list of current user due to an error on the microservice: ${friendListResponse.error.message}`);
 
-    let userRatingsObj ={};
+    const baseQuery = Event.find();
 
-    if (location) {
-        query = { ...query, location: location };
+    // filter events only accessible to the user
+    if (filter === 'friends-only') {
+        if (authorId && friendListResponse.data.includes(authorId)) {
+            baseQuery.where({ private: true, ownerId: new Types.ObjectId(authorId) });
+        }
+        else if (!authorId) {
+            baseQuery.where({ private: true, ownerId: { $in: friendListResponse.data.map(id => new Types.ObjectId(id)) } });
+        }
+        // we have an author filter set, but the author is not in the friend list
+        else {
+            throw new BadRequestError('Cannot filter private events of a user who is not your friend.', 'event.filter:private');
+        }
+    }
+    else if (filter === 'public-only') {
+        baseQuery.where({ private: false, ownerId: { $ne: userId } });
+    }
+    else {
+        if (authorId && !friendListResponse.data.includes(authorId)) {
+            baseQuery.where({ private: true, ownerId: new Types.ObjectId(authorId) });
+        }
+        else {
+            baseQuery.or([
+                { private: false, ownerId: { $ne: userId } },
+                { private: true, ownerId: { $in: friendListResponse.data.map(id => new Types.ObjectId(id)) } }
+            ]);
+        }
     }
 
-    if (dateStart) {
-        query = { ...query, date: { $gte: new Date(dateStart) } };
+    // filter by the location of the event and its category
+    if (location) baseQuery.where({ location: new RegExp(`${location}`, 'i') });
+    if (category) baseQuery.where({ category });
+
+    // filter by date range of the event
+    if (dateStart && dateEnd) {
+        baseQuery.where({date: { $gte: dateStart, $lte: dateEnd }});
+    }
+    else if (dateEnd) {
+        baseQuery.where({date: { $lte: dateEnd }});
+    }
+    else if (dateStart) {
+        baseQuery.where({date: { $gte: dateStart }});
     }
 
-    if (dateEnd) {
-        query = { ...query, date: { $lte: new Date(dateEnd) } };
+    const events = await baseQuery
+        .skip(pageSize * (pageNumber - 1))
+        .limit(pageSize)
+        .exec();
+
+    if (events.length === 0)
+        return events;
+
+    const authorIdSet = new Set(events.map((event) => event.ownerId.toString()));
+    const authorsResponse: TResponse<Record<string, any>> = await fetch(
+        microserviceUrl('user', 'authors', { authorIds: authorIdSet.values().toArray().join(',') }),
+        {headers: getFetchHeaders()}
+    ).then(res => res.json());
+
+    if (!authorsResponse.success)
+        throw new ServerError(`Failed to fetch authors list of retrieved events due to an error on the microservice: ${authorsResponse.error.message}`);
+
+    const eventsWithAuthors: Array<IEvent & { author: any }> = [];
+
+    for (const event of events) {
+        if (!(event.ownerId.toString() in authorsResponse.data))
+            continue;
+
+        if (rating && authorsResponse.data[event.ownerId.toString()] < rating)
+            continue;
+
+        eventsWithAuthors.push({
+            ...event.toObject(),
+            author: authorsResponse.data[event.ownerId.toString()]
+        });
     }
 
-    if (rating) {
-        const allUsers = await fetch(microserviceUrl('user', 'all'), {
-            headers: getFetchHeaders(),
-        }).then((response) => {
-            return response.json();
-        })
-
-        userRatingsObj = allUsers.data.reduce((acc: any, user: any) => {
-            acc[user._id] = user.ratings.reduce((acc: number, rating: any) => acc + rating.starRating, 0) / user.ratings.length;
-            return acc;
-        }, {});
-
-        query = { ...query, userRating: { $gte: rating } };
-    }
-
-    if (type) {
-        query = { ...query, category: type };
-    }
-
-    if (friendsOnly) {
-        const userProfile = await fetch(microserviceUrl('user', 'profile', { userId: userId }), {
-            headers: getFetchHeaders(),
-        }).then((response) => {
-            return response.json();
-        })
-
-        query = { ...query, "ownerId": { "$in": userProfile.data.friends.map((id: string) => new mongoose.Types.ObjectId(id)) } };
-    }
-
-    if (publicOnly) {
-        query = { ...query, private: false };
-    }
-
-    const events = Event.aggregate([
-        {
-            $addFields: {
-                userRating: {
-                    "$function": {
-                        body: function (userRatingsObj: any, ownerId: any) {
-
-                            return userRatingsObj[String(ownerId.str)];
-                        },
-                        args: [userRatingsObj, "$ownerId"],
-                        lang: "js"
-                    }
-                }
-            }
-        },
-        {
-            $match: query
-        },
-    ]).limit(pageSize).skip(pageSize * pageNumber).exec();
-
-    if (!events) throw new NotFoundError('No events found', 'event');
-
-    return events;
+    return eventsWithAuthors;
 }
 
-export async function getUsersEvents(data: TUserEventsValidator) {
+/**
+ * Adds author detail to an event object.
+ * @param event
+ */
+async function addAuthorDetail(event: THydratedEventDocument): Promise<IEvent & { author: any }> {
+    const authorsResponse: TResponse<Record<string, any>> = await fetch(
+        microserviceUrl('user', 'authors', { authorIds: event.ownerId.toString() }),
+        {headers: getFetchHeaders()}
+    ).then(res => res.json());
 
-    const { userId, pageSize, pageNumber } = data
+    if (!authorsResponse.success)
+        throw new ServerError(`Failed to fetch authors list of retrieved events due to an error on the microservice: ${authorsResponse.error.message}`);
 
-    const events = Event.find({ "ownerId": userId }).limit(pageSize).skip(pageSize * pageNumber).exec();
+    if (!(event.ownerId.toString() in authorsResponse.data))
+        throw new ServerError('Invalid event object.');
 
-    if (!events) throw new NotFoundError('No events found', 'event');
+    return {
+        ...event.toObject(),
+        author: authorsResponse.data[event.ownerId.toString()]
+    }
+}
 
-    return events;
+/**
+ * Gets detail of a single event.
+ * @param id
+ */
+export async function getEvent(id: string): Promise<IEvent & { author: any }> {
+    const event = await Event.findById(id);
+
+    if (!event)
+        throw new NotFoundError(`Could not find event with ID: ${id}.`, "event");
+
+    return addAuthorDetail(event);
+}
+
+/**
+ * Creates new event with given data.
+ * @param event
+ * @param userId
+ */
+export async function createEvent(event: TEventBody, userId: string): Promise<IEvent> {
+    const newEvent = new Event({
+        ...event,
+        description: event.description ?? null,
+        ownerId: new Types.ObjectId(userId),
+        category: "general"
+    });
+
+    return addAuthorDetail(await newEvent.save());
+}
+
+/**
+ * Updates existing event with new data.
+ * @param id
+ * @param updates
+ * @param userId
+ */
+export async function updateEvent(id: string, updates: TEventBody, userId: string): Promise<IEvent> {
+    const event = await Event.findById(id);
+
+    if (!event)
+        throw new NotFoundError(`Could not find event with ID: ${id}.`, "event");
+
+    if (!event.ownerId.equals(userId))
+        throw new PermissionError('You are not authorized to update this event.', 'event:write');
+
+    const updatedEvent = await Event.findByIdAndUpdate(
+        id, {...updates, description: updates.description ?? null}, {new: true}
+    );
+
+    return addAuthorDetail(updatedEvent!);
 }

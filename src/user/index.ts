@@ -5,6 +5,7 @@ import {userManagementController} from "./controller/user-management.controller.
 import {NotFoundError} from "./error/response/not-found.error.ts";
 import cors from "cors";
 import { friendRequestController } from './controller/friend-request.controller.ts';
+import {userController} from "./controller/user.controller.ts";
 
 const port = process.env.APP_PORT;
 const appName = process.env.APP_NAME || 'unknown';
@@ -23,8 +24,9 @@ app.use(cors({origin: true, credentials: true}));
 app.use(express.json());
 
 // add controllers here...
-app.use('/', userManagementController); // /user
-app.use('/friend-request', friendRequestController); // /user/friend-request
+app.use('/', userController); // route /user
+app.use('/', userManagementController); // route /user
+app.use('/friend-request', friendRequestController); // route /user/friend-request
 
 // global handler for 404
 app.use((req, res, next) => {
