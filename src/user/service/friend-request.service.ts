@@ -54,7 +54,7 @@ export async function createFriendRequest(senderId: Types.ObjectId, receiverId: 
 	});
 
   	if (existingRequest)
-		  throw new BadRequestError("A friend request already exists between these users.", "duplicate_request");
+		  throw new BadRequestError("A friend request already exists between these users.", "friend_request:duplicate_request");
 
 	const friendRequest = new FriendRequest({
 		sender: senderId,

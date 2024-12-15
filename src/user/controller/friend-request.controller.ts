@@ -47,9 +47,8 @@ friendRequestController.get(
 friendRequestController.post(
     "/", loginGuard(), bodyValidator(friendRequestBodySchema),
     async (req: AppRequest<never,never,TFriendRequestBody>, res: Response) => {
-        createFriendRequest(new Types.ObjectId(req.user!.id), req.body.receiver).then(
-            () => emptyResponse(res)
-        );
+        await createFriendRequest(new Types.ObjectId(req.user!.id), req.body.receiver);
+        emptyResponse(res);
     }
 );
 
@@ -61,15 +60,12 @@ friendRequestController.patch(
     paramValidator(friendRequestParamSchema), bodyValidator(friendRequestStatusBodySchema),
     async (req: AppRequest<TFriendRequestParam,never,TFriendRequestStatusBody>, res: Response) => {
         if (req.body.accept) {
-            acceptFriendRequest(req.parsedParams!.requestId, new Types.ObjectId(req.user!.id)).then(
-                () => emptyResponse(res)
-            );
-            return;
+            await acceptFriendRequest(req.parsedParams!.requestId, new Types.ObjectId(req.user!.id));
+            return emptyResponse(res);
         }
 
-        rejectFriendRequest(req.parsedParams!.requestId, new Types.ObjectId(req.user!.id)).then(
-            () => emptyResponse(res)
-        );
+        await rejectFriendRequest(req.parsedParams!.requestId, new Types.ObjectId(req.user!.id));
+        emptyResponse(res);
     }
 );
 
@@ -79,8 +75,7 @@ friendRequestController.patch(
 friendRequestController.delete(
     "/:requestId", loginGuard(), paramValidator(friendRequestParamSchema),
     async (req: AppRequest<TFriendRequestParam>, res: Response) => {
-        removeFriendRequest(req.parsedParams!.requestId, new Types.ObjectId(req.user!.id)).then(
-            () => emptyResponse(res)
-        );
+        await removeFriendRequest(req.parsedParams!.requestId, new Types.ObjectId(req.user!.id))
+        emptyResponse(res);
     }
 );
