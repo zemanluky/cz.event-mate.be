@@ -1,29 +1,86 @@
 import express, {type Response} from "express";
 import { loginGuard } from "../helper/login-guard";
 import type { AppRequest } from "../types";
-import { rejectFriendRequest } from "../service/friend-request";
-import { acceptFriendRequest } from "../service/friend-request";
+import {emptyResponse, successResponse} from "../helper/response.helper.ts";
+import {
+    acceptFriendRequest, createFriendRequest,
+    getFriendRequestCount, getFriendRequests,
+    rejectFriendRequest,
+    removeFriendRequest
+} from "../service/friend-request.service.ts";
+import {bodyValidator, paramValidator} from "../helper/request.validator.ts";
+import {
+    friendRequestBodySchema,
+    friendRequestParamSchema, friendRequestStatusBodySchema, type TFriendRequestBody,
+    type TFriendRequestParam,
+    type TFriendRequestStatusBody
+} from "../schema/request/friend-request.schema.ts";
+import {Types} from "mongoose";
 
 export const friendRequestController = express.Router();
 
-// Reject a friend request
-friendRequestController.delete("/:requestId", loginGuard(),
-  async (req: AppRequest, res: Response) => {
-    const userId = req.user!.id;
-    const requestId = req.params.requestId;
-
-	const result = await rejectFriendRequest(userId, requestId);
-	res.status(200).json({ message: result });
-  }
+/**
+ * Gets user friend-request
+ */
+friendRequestController.get(
+    '/', loginGuard(),
+    async (req: AppRequest, res: Response) => {
+        const friendRequests = await getFriendRequests(req.user!.id);
+        successResponse(res, friendRequests);
+    }
 );
 
-// Accept a friend request
-friendRequestController.patch("/:requestId/status", loginGuard(),
-  async (req: AppRequest, res: Response) => {
-    const userId = req.user!.id; // Logged-in user
-    const requestId = req.params.requestId;
+/**
+ * Gets the number of friend requests.
+ */
+friendRequestController.get(
+    '/count', loginGuard(),
+    async (req: AppRequest, res: Response) => {
+        const count = await getFriendRequestCount(req.user!.id);
+        successResponse(res, { count });
+    }
+);
 
-	const result = await acceptFriendRequest(userId, requestId);
-	res.status(200).json({ message: "Friend request accepted successfully", result });
-  }
+/**
+ * Creates new friend request.
+ */
+friendRequestController.post(
+    "/", loginGuard(), bodyValidator(friendRequestBodySchema),
+    async (req: AppRequest<never,never,TFriendRequestBody>, res: Response) => {
+        createFriendRequest(new Types.ObjectId(req.user!.id), req.body.receiver).then(
+            () => emptyResponse(res)
+        );
+    }
+);
+
+/**
+ * Accepts or rejects a given friend request.
+ */
+friendRequestController.patch(
+    "/:requestId", loginGuard(),
+    paramValidator(friendRequestParamSchema), bodyValidator(friendRequestStatusBodySchema),
+    async (req: AppRequest<TFriendRequestParam,never,TFriendRequestStatusBody>, res: Response) => {
+        if (req.body.accept) {
+            acceptFriendRequest(req.parsedParams!.requestId, new Types.ObjectId(req.user!.id)).then(
+                () => emptyResponse(res)
+            );
+            return;
+        }
+
+        rejectFriendRequest(req.parsedParams!.requestId, new Types.ObjectId(req.user!.id)).then(
+            () => emptyResponse(res)
+        );
+    }
+);
+
+/**
+ * Deletes a given friend request.
+ */
+friendRequestController.delete(
+    "/:requestId", loginGuard(), paramValidator(friendRequestParamSchema),
+    async (req: AppRequest<TFriendRequestParam>, res: Response) => {
+        removeFriendRequest(req.parsedParams!.requestId, new Types.ObjectId(req.user!.id)).then(
+            () => emptyResponse(res)
+        );
+    }
 );

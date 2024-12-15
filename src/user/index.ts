@@ -24,9 +24,9 @@ app.use(cors({origin: true, credentials: true}));
 app.use(express.json());
 
 // add controllers here...
-app.use('/', userController); // route /user
-app.use('/', userManagementController); // route /user
 app.use('/friend-request', friendRequestController); // route /user/friend-request
+app.use('/', userManagementController); // route /user
+app.use('/', userController); // route /user
 
 // global handler for 404
 app.use((req, res, next) => {

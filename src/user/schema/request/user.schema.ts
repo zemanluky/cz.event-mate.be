@@ -32,14 +32,10 @@ export const verifyAvailabilityQuerySchema = z.object({
 export const identityByEmailParamSchema = z.object({ email: z.string().email() });
 
 export const userIdParamSchema = z.object({
-    id: z.string()
+    id: z.string().trim().pipe(zodObjectId).transform(val => new Types.ObjectId(val))
 });
 
-export const friendRequestQuerySchema = z.object({
-    userId: z.string().min(0,"User ID is required."),
-});
-export type TFriendRequestQuery = z.infer<typeof friendRequestQuerySchema>;
-
+export type TUserIdParam = z.infer<typeof userIdParamSchema>;
 export type TRegistrationData = z.infer<typeof registerUserBodySchema>;
 export type TUpdateUserData = z.infer<typeof updateUserSchema>;
 export type TAvailabilityQuery = z.infer<typeof verifyAvailabilityQuerySchema>;
@@ -53,8 +49,3 @@ export const authorsListQuerySchema = z.object({
         )
 });
 export type TAuthorListQuery = z.infer<typeof authorsListQuerySchema>;
-
-export const userFriendListParamSchema = z.object({
-    id: z.string().trim().pipe(zodObjectId).transform(val => new Types.ObjectId(val))
-});
-export type TUserFriendListParams = z.infer<typeof userFriendListParamSchema>;

@@ -7,51 +7,8 @@ import { BadRequestError } from "../error/response/bad-request.error.ts";
 import { NotFoundError } from "../error/response/not-found.error.ts";
 import type { IUserRating } from "../schema/db/rating.schema.ts";
 import { FriendRequest } from "../schema/db/friend-request.schema.ts";
-
-type TAvailabilityPair = {
-    email?: boolean;
-    username?: boolean;
-};
-
-/**
- * Gets the count of pending friend requests for a specific user.
- * @param userId - The ID of the user.
- */
-export async function getFriendRequestCount(userId: string): Promise<number> {
-    return await FriendRequest.countDocuments({ receiver: userId, state: 'pending' });
-}
-
-/**
- * Gets the ratings of a specific user by their ID.
- * @param userId The ID of the user whose ratings will be fetched.
- */
-export const getUserRatings = async (userId: string): Promise<IUserRating[]> => {
-    try {
-        const user = await User.findById(userId).populate("ratings").exec();
-
-        if (!user) {
-            throw new NotFoundError(`User with ID ${userId} not found.`, "user");
-        }
-
-        return user.ratings || [];
-    } catch (error) {
-        throw new ServerError("Error fetching user ratings.");
-    }
-};
-
-/**
- * Gets a user by ID.
- * @param id
- */
-export async function getUser(id: string): Promise<IUser> {
-    const user = await User.findById(id);
-
-    if (!user) {
-        throw new NotFoundError(`Could not find user with ID: ${id}.`, "user");
-    }
-
-    return user.toObject();
-}
+import {Types} from "mongoose";
+import {UnauthenticatedError} from "../error/response/unauthenticated.error.ts";
 
 /**
  * Gets the identity of a user by their email.
@@ -66,6 +23,11 @@ export async function getIdentityByEmail(email: string): Promise<string> {
 
     return user._id.toString();
 }
+
+type TAvailabilityPair = {
+    email?: boolean;
+    username?: boolean;
+};
 
 /**
  * Checks the availability of the given username and/or email.
@@ -123,20 +85,6 @@ export async function registerUser(data: TRegistrationData): Promise<THydratedUs
 }
 
 /**
- * Fetches friend requests for a specific user.
- * @param userId The ID of the user.
- */
-export async function getFriendRequests(userId: string) {
-    const friendRequests = await FriendRequest.find({ receiver: userId }).populate("sender", "name username").exec();
-
-    if (!friendRequests.length) {
-        throw new NotFoundError(`No friend requests found for user with ID: ${userId}.`, "friend_request");
-    }
-
-    return friendRequests.map((request) => request.toObject());
-}
-
-/**
  * @param data
  * @param id
  */
@@ -157,11 +105,37 @@ export async function updateProfile(data: TUpdateUserData, id: string): Promise<
         user.username = data.username;
     }
 
-    
-
     user.bio = data.bio || null;
     user.name = data.name;
     user.surname = data.surname;
 
     return await user.save();
+}
+
+/**
+ * Removes a given friend from the user's friend list.
+ * @param friendId
+ * @param userId
+ */
+export async function removeFriend(friendId: Types.ObjectId, userId: Types.ObjectId): Promise<void> {
+    const friend = await User.findById(friendId);
+    const user = await User.findById(userId);
+
+    if (!user)
+        throw new UnauthenticatedError("You are logged in as a user that does not exist.");
+
+    if (!friend)
+        throw new NotFoundError(`The friend with ID "${friendId}" to remove was not found.`, "user");
+
+    if (user.friends.findIndex(f => f.equals(friendId)) === -1)
+        throw new BadRequestError("The user you are trying to remove from your friends list is not your friend.", "user:remove_stranger");
+
+    user.friends = user.friends.filter(f => !f.equals(friendId));
+    friend.friends = friend.friends.filter(f => !f.equals(userId));
+
+    user.markModified("friends");
+    friend.markModified("friends");
+
+    await user.save();
+    await friend.save();
 }

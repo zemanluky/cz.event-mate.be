@@ -1,5 +1,5 @@
 import {type HydratedDocument, type InferRawDocType, model, type Model, Schema, Types} from "mongoose";
-import {type IUserRating, userRatingSchema} from "./rating.schema.ts";
+import {type IUserRating, type THydratedRatingDocument, userRatingSchema} from "./rating.schema.ts";
 
 export interface IUser {
     _id: Types.ObjectId;
@@ -21,7 +21,7 @@ export interface IUser {
     ratings: Array<IUserRating>;
 }
 
-export type THydratedUserDocument = HydratedDocument<IUser & { ratings?: Types.DocumentArray<IUserRating> }>;
+export type THydratedUserDocument = HydratedDocument<IUser & { ratings?: Types.DocumentArray<THydratedRatingDocument> }>;
 
 type TUserModel = Model<IUser, {}, {}, {}, THydratedUserDocument>;
 
