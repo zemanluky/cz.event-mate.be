@@ -37,8 +37,13 @@ export async function createFriendRequest(senderId: Types.ObjectId, receiverId: 
 	if (senderId === receiverId)
 		throw new BadRequestError("Sender and receiver cannot be the same user.", "request_to_self");
 
-	if (!(await User.exists({ _id: receiverId })))
+	const receiver = await User.findById(receiverId);
+
+	if (!receiver)
 		throw new BadRequestError("The receiver does not exist. Please check the receiver.", 'receiver_not_found');
+
+	if (receiver.friends.findIndex(friend => friend.equals(senderId)) !== -1)
+		throw new BadRequestError("You already are a friend of the user.", "friend_request:already_friends");
 
 	const existingRequest = await FriendRequest.findOne({
 		$or: [
