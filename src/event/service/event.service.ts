@@ -94,8 +94,12 @@ export async function getFilteredEvents(queryFilter: TFilterEventsValidator, use
         if (!(event.ownerId.toString() in authorsResponse.data))
             continue;
 
-        if (rating && authorsResponse.data[event.ownerId.toString()] < rating)
+        if (
+            rating && authorsResponse.data[event.ownerId.toString()].average_rating !== null
+            && authorsResponse.data[event.ownerId.toString()].average_rating < rating
+        ) {
             continue;
+        }
 
         eventsWithAuthors.push({
             ...event.toObject(),
@@ -151,7 +155,7 @@ export async function createEvent(event: TEventBody, userId: string): Promise<IE
         ...event,
         description: event.description ?? null,
         ownerId: new Types.ObjectId(userId),
-        category: "general"
+        category: "general" // TODO: implement saving of the category with checking the existence of the category
     });
 
     return addAuthorDetail(await newEvent.save());
