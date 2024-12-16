@@ -27,8 +27,9 @@ import {microserviceGuard} from "../helper/microservice.url.ts";
 import * as R from 'remeda';
 import {getUser, getAllUsers} from "../service/user.service.ts";
 import {Types} from "mongoose";
-import { userRatingSchema } from "../schema/request/user.schema.ts";
+import { userSchemaForRating } from "../schema/request/user.schema.ts";
 import type { IUserRating } from "../schema/db/rating.schema.ts";
+import { addUserRating } from "../service/user-management.service.ts";
 
 export const userManagementController = express.Router();
 
@@ -113,13 +114,14 @@ userManagementController.get(
 userManagementController.post(
     '/user/:id/rating',
     paramValidator(userIdParamSchema),
-    bodyValidator(userRatingSchema),
+    bodyValidator(userSchemaForRating),
     async (req: AppRequest<{ id: string }, never, IUserRating>, res: Response) => {
         const userId = req.parsedParams!.id;
         const ratingData = req.body;
 
-        // const rating = await addUserRating(userId, ratingData);
-        // successResponse(res, { rating }, StatusCodes.CREATED);
+        const rating = await addUserRating(userId, ratingData);
+        successResponse(res, { rating }, StatusCodes.CREATED);
     }
 );
+
 

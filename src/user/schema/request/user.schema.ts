@@ -35,7 +35,7 @@ export const userIdParamSchema = z.object({
     id: z.string().trim().pipe(zodObjectId).transform(val => new Types.ObjectId(val))
 });
 
-export const userRatingSchema = z.object({
+export const userSchemaForRating = z.object({
     author: z.string(),
     starRating: z.number().min(0).max(5),
     comment: z.string().optional(),

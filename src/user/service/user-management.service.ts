@@ -1,4 +1,4 @@
-import type { TAvailabilityQuery, TRegistrationData, TUpdateUserData } from "../schema/request/user.schema.ts";
+import { type TAvailabilityQuery, type TRegistrationData, type TUpdateUserData } from "../schema/request/user.schema.ts";
 import { type THydratedUserDocument, User, type IUser } from "../schema/db/user.schema.ts";
 import { getFetchHeaders, microserviceUrl } from "../helper/microservice.url.ts";
 import type { TResponse } from "../helper/response.helper.ts";
@@ -6,9 +6,9 @@ import { ServerError } from "../error/response/server.error.ts";
 import { BadRequestError } from "../error/response/bad-request.error.ts";
 import { NotFoundError } from "../error/response/not-found.error.ts";
 import type { IUserRating } from "../schema/db/rating.schema.ts";
-import { FriendRequest } from "../schema/db/friend-request.schema.ts";
 import {Types} from "mongoose";
 import {UnauthenticatedError} from "../error/response/unauthenticated.error.ts";
+import { userRatingSchema } from "../schema/db/rating.schema.ts";
 
 /**
  * Gets the identity of a user by their email.
@@ -85,6 +85,7 @@ export async function registerUser(data: TRegistrationData): Promise<THydratedUs
 }
 
 /**
+ * Updates the profile of a user.
  * @param data
  * @param id
  */
@@ -140,4 +141,38 @@ export async function removeFriend(friendId: Types.ObjectId, userId: Types.Objec
     await friend.save();
 }
 
-export async function addUserRating(userId: string, ratingData: Partial<IUserRating>): Promise<IUserRating> {}
+/**
+ * Adds a rating for a user.
+ * @param userId
+ * @param ratingData
+ */
+export async function addUserRating(userId: string, ratingData: Partial<IUserRating>): Promise<IUserRating> {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new NotFoundError(`User with ID ${userId} not found.`, "user");
+    }
+
+    // Validace hodnocení
+    if (!ratingData.author || !Types.ObjectId.isValid(ratingData.author)) {
+        throw new BadRequestError("Invalid author ID provided.", "rating");
+    }
+
+    if (!ratingData.starRating || ratingData.starRating < 0 || ratingData.starRating > 5) {
+        throw new BadRequestError("Star rating must be between 0 and 5.", "rating");
+    }
+
+    // Vytvoření hodnocení
+    const rating = new userRatingSchema({
+        ...ratingData,
+        createdAt: new Date(),
+    });
+
+    // Přidání hodnocení k uživateli
+    user.ratings.push(rating._id);
+    await user.save();
+
+    // Uložení dokumentu hodnocení
+    await rating.save();
+
+    return rating.toObject();
+}

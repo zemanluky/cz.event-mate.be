@@ -37,5 +37,6 @@ const userSchema = new Schema<IUser, TUserModel>({
 });
 
 
+
 export const User = model<IUser, TUserModel>('User', userSchema);
 export type TUser = InferRawDocType<typeof userSchema>;
