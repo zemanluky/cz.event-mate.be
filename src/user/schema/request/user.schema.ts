@@ -36,17 +36,14 @@ export const userIdParamSchema = z.object({
 export const friendRequestQuerySchema = z.object({
     userId: z.string().min(0,"User ID is required."),
 });
-export type TFriendRequestQuery = z.infer<typeof friendRequestQuerySchema>;
 
-export const userRatingSchema = z.object({
+export const userSchemaForRating = z.object({
     author: z.string(),
     starRating: z.number().min(0).max(5),
     comment: z.string().optional(),
 });
 
-
-
-
+export type TFriendRequestQuery = z.infer<typeof friendRequestQuerySchema>;
 export type TRegistrationData = z.infer<typeof registerUserBodySchema>;
 export type TUpdateUserData = z.infer<typeof updateUserSchema>;
 export type TAvailabilityQuery = z.infer<typeof verifyAvailabilityQuerySchema>;

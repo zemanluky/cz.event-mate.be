@@ -27,8 +27,9 @@ import { friendRequestQuerySchema } from "../schema/request/user.schema.ts";
 import { getFriendRequests } from "../service/user-management.service.ts";
 import {BadRequestError} from "../error/response/bad-request.error.ts"
 import { NotFoundError } from "../error/response/not-found.error.ts"
-import { userRatingSchema } from "../schema/request/user.schema.ts";
+import { userSchemaForRating } from "../schema/request/user.schema.ts";
 import type { IUserRating } from "../schema/db/rating.schema.ts";
+import { addUserRating } from "../service/user-management.service.ts";
 
 
 export const userManagementController = express.Router();
@@ -171,13 +172,14 @@ userManagementController.get(
 userManagementController.post(
     '/user/:id/rating',
     paramValidator(userIdParamSchema),
-    bodyValidator(userRatingSchema),
+    bodyValidator(userSchemaForRating),
     async (req: AppRequest<{ id: string }, never, IUserRating>, res: Response) => {
         const userId = req.parsedParams!.id;
         const ratingData = req.body;
 
-        // const rating = await addUserRating(userId, ratingData);
-        // successResponse(res, { rating }, StatusCodes.CREATED);
+        const rating = await addUserRating(userId, ratingData);
+        successResponse(res, { rating }, StatusCodes.CREATED);
     }
 );
+
 
