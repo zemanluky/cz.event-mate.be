@@ -139,3 +139,5 @@ export async function removeFriend(friendId: Types.ObjectId, userId: Types.Objec
     await user.save();
     await friend.save();
 }
+
+export async function addUserRating(userId: string, ratingData: Partial<IUserRating>): Promise<IUserRating> {}
