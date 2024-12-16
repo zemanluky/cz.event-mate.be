@@ -157,7 +157,7 @@ export async function updateProfile(data: TUpdateUserData, id: string): Promise<
         user.username = data.username;
     }
 
-    
+    export async function addUserRating(userId: string, ratingData: Partial<IUserRating>): Promise<IUserRating> {}
 
     user.bio = data.bio || null;
     user.name = data.name;
