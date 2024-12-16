@@ -5,8 +5,8 @@ import type { TResponse } from "../helper/response.helper.ts";
 import { ServerError } from "../error/response/server.error.ts";
 import { BadRequestError } from "../error/response/bad-request.error.ts";
 import { NotFoundError } from "../error/response/not-found.error.ts";
-import type { IUserRating } from "../schema/db/rating.schema.ts";
-import {Types} from "mongoose";
+import type { IUserRating, TUserRatingModel } from "../schema/db/rating.schema.ts";
+import mongoose, {Types} from "mongoose";
 import {UnauthenticatedError} from "../error/response/unauthenticated.error.ts";
 import { userRatingSchema } from "../schema/db/rating.schema.ts";
 
@@ -152,7 +152,6 @@ export async function addUserRating(userId: string, ratingData: Partial<IUserRat
         throw new NotFoundError(`User with ID ${userId} not found.`, "user");
     }
 
-    // Validace hodnocení
     if (!ratingData.author || !Types.ObjectId.isValid(ratingData.author)) {
         throw new BadRequestError("Invalid author ID provided.", "rating");
     }
@@ -161,17 +160,16 @@ export async function addUserRating(userId: string, ratingData: Partial<IUserRat
         throw new BadRequestError("Star rating must be between 0 and 5.", "rating");
     }
 
-    // Vytvoření hodnocení
-    const rating = new userRatingSchema({
+    const UserRatingModel = mongoose.model<IUserRating, TUserRatingModel>("UserRating", userRatingSchema);
+
+    const rating = new UserRatingModel({
         ...ratingData,
         createdAt: new Date(),
     });
 
-    // Přidání hodnocení k uživateli
     user.ratings.push(rating._id);
     await user.save();
 
-    // Uložení dokumentu hodnocení
     await rating.save();
 
     return rating.toObject();
