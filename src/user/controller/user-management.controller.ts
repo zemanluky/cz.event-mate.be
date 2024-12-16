@@ -25,9 +25,10 @@ import {emptyResponse, successResponse} from "../helper/response.helper.ts";
 import {StatusCodes} from "http-status-codes";
 import {microserviceGuard} from "../helper/microservice.url.ts";
 import * as R from 'remeda';
-import {getAllUsers, getUser} from "../service/user.service.ts";
+import {getUser, getAllUsers} from "../service/user.service.ts";
 import {Types} from "mongoose";
-import {userController} from "./user.controller.ts";
+import { userRatingSchema } from "../schema/request/user.schema.ts";
+import type { IUserRating } from "../schema/db/rating.schema.ts";
 
 export const userManagementController = express.Router();
 
@@ -106,5 +107,18 @@ userManagementController.get(
     async (req: AppRequest, res: Response) => {
         const users = await getAllUsers();
         successResponse(res, users);
+    }
+);
+
+userManagementController.post(
+    '/user/:id/rating',
+    paramValidator(userIdParamSchema),
+    bodyValidator(userRatingSchema),
+    async (req: AppRequest<{ id: string }, never, IUserRating>, res: Response) => {
+        const userId = req.parsedParams!.id;
+        const ratingData = req.body;
+
+        // const rating = await addUserRating(userId, ratingData);
+        // successResponse(res, { rating }, StatusCodes.CREATED);
     }
 );
