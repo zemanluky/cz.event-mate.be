@@ -38,6 +38,11 @@ export const friendRequestQuerySchema = z.object({
 });
 export type TFriendRequestQuery = z.infer<typeof friendRequestQuerySchema>;
 
+export const userRatingSchema = z.object({
+    author: z.string(),
+    starRating: z.number().min(0).max(5),
+    comment: z.string().optional(),
+});
 
 
 
