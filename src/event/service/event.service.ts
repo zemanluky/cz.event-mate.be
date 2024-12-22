@@ -214,3 +214,28 @@ export const markAttendance = async (eventId: string, userId: string) => {
 
     return { message: "Attendance updated successfully" };
 };
+
+// In event.service.ts
+export const removeAttendance = async (eventId: string, userId: string) => {
+    // Find the event by ID
+    const event = await Event.findById(eventId);
+    if (!event) {
+        throw new NotFoundError(`Could not find event with ID: ${eventId}.`, "event");
+    }
+
+    // Check if the user is attending
+    const userObjectId = new Types.ObjectId(userId);
+    const attendanceIndex = event.attendees.indexOf(userObjectId);
+
+    if (attendanceIndex === -1) {
+        throw new BadRequestError("User is not attending this event.", "event:attendance");
+    }
+
+    // Remove the user from the attendees list
+    event.attendees.splice(attendanceIndex, 1);
+    
+    // Save the updated event
+    await event.save();
+
+    return { message: "Attendance removed successfully" };
+};
