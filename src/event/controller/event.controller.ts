@@ -86,9 +86,9 @@ eventController.delete("/:id/attendance", loginGuard(), paramValidator(idSchema)
 
     if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
-    }else{
-    const response = await removeAttendance(eventId, userId);
-    return res.status(200).json(response); 
-}
+    }
+
+    const remove = await removeAttendance(eventId, userId);
+        successResponse(res, remove);
 });
 
