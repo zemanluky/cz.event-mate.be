@@ -2,16 +2,15 @@ import express, { type Request, type Response } from "express";
 import { BadRequestError } from "../error/response/bad-request.error";
 import { Event, type IEvent } from "../schema/db/event.schema";
 import { loginGuard } from "../helper/login-guard";
-import { bodyValidator, paramValidator } from "../helper/request.validator";
+import { bodyValidator, paramValidator, queryValidator } from "../helper/request.validator";
 import type { AppRequest } from "../types";
 import {eventSchema, idSchema, type TEventBody} from "../schema/request/event.schema";
 import mongoose from "mongoose";
-import { queryValidator } from "../helper/request.validator";
 import { filterEventsValidator, type TFilterEventsValidator } from "../schema/request/event.schema";
 import {createEvent, getEvent, getFilteredEvents, removeAttendance, updateEvent,} from "../service/event.service.ts"
 import { successResponse } from "../helper/response.helper.ts";
 import { markAttendance } from "../service/event.service.ts";
-
+import { getMonthOverview } from '../service/event.service';
 
 export const eventController = express.Router();
 
@@ -92,3 +91,11 @@ eventController.delete("/:id/attendance", loginGuard(), paramValidator(idSchema)
         successResponse(res, remove);
 });
 
+eventController.get('/month-overview', 
+    loginGuard(), 
+    queryValidator(filterEventsValidator),
+    async (req: Request, res: Response) => {
+            const events = await getMonthOverview(req.user!.id, req.parsedQuery!);
+            successResponse(res, events);    
+    }
+);

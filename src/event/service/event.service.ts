@@ -7,6 +7,8 @@ import {ServerError} from "../error/response/server.error.ts";
 import {BadRequestError} from "../error/response/bad-request.error.ts";
 import {PermissionError} from "../error/response/permission.error.ts";
 import { Types } from "mongoose";
+import { startOfMonth, endOfMonth } from 'date-fns';
+
 
 /**
  * Gets a filtered and paginated list of events.
@@ -199,7 +201,7 @@ export const markAttendance = async (eventId: string, userId: string) => {
     const userObjectId = new Types.ObjectId(userId);
 
     // Check if the user is already in the attendees list
-    const attendanceIndex = event.attendees.indexOf(userObjectId);
+    const attendanceIndex = event.attendees.findIndex(attendee => attendee.toString() === userObjectId.toString());
 
     if (attendanceIndex === -1) {
         // If the user is not attending, add them
@@ -238,3 +240,30 @@ export const removeAttendance = async (eventId: string, userId: string) => {
 
     return { message: "Attendance removed successfully" };
 };
+
+export async function getMonthOverview(userId: string, queryFilter: TFilterEventsValidator) {
+    const { rating, filter } = queryFilter;
+
+    const startOfMonthDate = startOfMonth(new Date());
+    const endOfMonthDate = endOfMonth(new Date());
+
+    const baseQuery = Event.find({
+        date: { $gte: startOfMonthDate, $lte: endOfMonthDate }
+    });
+
+    if (rating) {
+        baseQuery.where({
+            rating: { $gte: rating }
+        });
+    }
+
+    if (filter === 'friends-only') {
+        baseQuery.where({ private: true, ownerId: { $in: [userId] } });
+    } else if (filter === 'public-only') {
+        baseQuery.where({ private: false });
+    }
+
+    const events = await baseQuery.exec();
+
+    return events;
+}
