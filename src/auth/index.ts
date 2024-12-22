@@ -5,6 +5,7 @@ import {googleAuthController} from './controller/google-auth.controller.ts';
 import {authController} from "./controller/auth.controller.ts";
 import {NotFoundError} from "./error/response/not-found.error.ts";
 import cookieParser from "cookie-parser";
+import cors from 'cors';
 
 const port = process.env.APP_PORT;
 const appName = process.env.APP_NAME || 'unknown';
@@ -19,6 +20,7 @@ await connectToMongo();
 const app = express();
 
 // parse json body
+app.use(cors({origin: true, credentials: true}));
 app.use(express.json());
 app.use(cookieParser());
 

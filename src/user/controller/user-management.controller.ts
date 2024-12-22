@@ -2,21 +2,26 @@ import express, {type Response} from "express";
 import type {AppRequest} from "../types";
 import {
     identityByEmailParamSchema,
-    registerUserBodySchema, type TAvailabilityQuery, type TIdentityByEmailParams,
+    registerUserBodySchema,
+    type TAvailabilityQuery,
+    type TIdentityByEmailParams,
     type TRegistrationData,
     type TUpdateUserData,
-    updateUserSchema, verifyAvailabilityQuerySchema, type TFriendRequestQuery
+    type TUserIdParam,
+    updateUserSchema,
+    userIdParamSchema,
+    verifyAvailabilityQuerySchema
 } from "../schema/request/user.schema.ts";
 import {loginGuard} from "../helper/login-guard.ts";
 import {bodyValidator, paramValidator, queryValidator} from "../helper/request.validator.ts";
 import {
     checkAvailability,
-    getFriendRequestCount,
     getIdentityByEmail,
     registerUser,
+    removeFriend,
     updateProfile
 } from "../service/user-management.service.ts";
-import {errorResponse, successResponse} from "../helper/response.helper.ts";
+import {emptyResponse, successResponse} from "../helper/response.helper.ts";
 import {StatusCodes} from "http-status-codes";
 import {microserviceGuard} from "../helper/microservice.url.ts";
 import * as R from 'remeda';
@@ -31,6 +36,9 @@ import { userSchemaForRating } from "../schema/request/user.schema.ts";
 import type { IUserRating } from "../schema/db/rating.schema.ts";
 import { addUserRating } from "../service/user-management.service.ts";
 
+import {getAllUsers, getUser} from "../service/user.service.ts";
+import {Types} from "mongoose";
+import {userController} from "./user.controller.ts";
 
 export const userManagementController = express.Router();
 
@@ -85,87 +93,30 @@ userManagementController.put(
 userManagementController.get(
     '/profile', loginGuard(),
     async (req: AppRequest, res: Response) => {
-        const user = await getUser(req.user!.id);
-        successResponse(res, R.omit(user, ['friends', 'profile_picture_path']));
+        const user = await getUser(new Types.ObjectId(req.user!.id));
+        successResponse(res, R.omit(user, ['profile_picture_path']));
     }
 );
 
 /**
- * Gets user by their ID.
+ * Removes a friend from the current user's friend list.
  */
-userManagementController.get(
-    '/user/:id', loginGuard(),
-     paramValidator(userIdParamSchema),
-    async (req: AppRequest<TIdentityByEmailParams>, res: Response) => {
-            const user = await getUser(req.parsedParams!.email); 
-            successResponse(res, user);
-            if(!getUser){
-            const notFoundError = new NotFoundError(
-                "Failed to find user",
-                "user_fetch_error"
-            );
-            errorResponse(res, notFoundError.message, notFoundError.httpCode, notFoundError.errorCode);
-            }
-        }
-);
-
-/**
- * Gets user rating by their ID.
- */
-
-userManagementController.get(
-    "/user/:id/rating", loginGuard(),
-    paramValidator(userIdParamSchema), //validator
-    async (req: AppRequest<{ id: string }>, res: Response) => {
-            const userId = req.parsedParams!.id;
-            const ratings = await getUserRatings(userId);
-            successResponse(res, { ratings });
-            if(!getUserRatings){
-            const notFoundError = new NotFoundError(
-                "Failed to find user-raiting",
-                "user_raiting_fetch_error"
-            );
-            errorResponse(res, notFoundError.message, notFoundError.httpCode, notFoundError.errorCode);
-        }
+userManagementController.delete(
+    '/friend/:id', loginGuard(), paramValidator(userIdParamSchema),
+    async (req: AppRequest<TUserIdParam>, res: Response) => {
+        await removeFriend(req.parsedParams!.id, new Types.ObjectId(req.user!.id));
+        emptyResponse(res);
     }
-);
+)
 
 /**
- * Gets user friend-request
+ * Gets all users.
  */
-
 userManagementController.get(
-    '/friend-request', loginGuard(),
-    queryValidator(friendRequestQuerySchema),
-    async (req: AppRequest<never, TFriendRequestQuery>, res: Response) => {
-            const { userId } = req.parsedQuery!;
-            const friendRequests = await getFriendRequests(userId);
-            successResponse(res, friendRequests, StatusCodes.OK);
-            if(!getFriendRequests){
-            const badRequestError = new BadRequestError(
-                "Failed to retrieve friend requests",
-                "friend_request_fetch_error"
-            );
-            errorResponse(res, badRequestError.message, badRequestError.httpCode, badRequestError.errorCode);
-            }
-        }
-);
-
-userManagementController.get(
-    '/friend-request/count', loginGuard(),
+    '/all', microserviceGuard(),
     async (req: AppRequest, res: Response) => {
-            const userId = req.user?.id;
-            if (!userId) {
-                throw new Error("User ID is missing");
-            }
-            const count = await getFriendRequestCount(userId);
-            if(!getFriendRequestCount){
-            const badRequestError = new BadRequestError(
-                "Failed to retrieve friend requests",
-                "friend_request_fetch_error"
-            );
-            errorResponse(res, badRequestError.message, badRequestError.httpCode, badRequestError.errorCode);
-        }
+        const users = await getAllUsers();
+        successResponse(res, users);
     }
 );
 
@@ -181,5 +132,4 @@ userManagementController.post(
         successResponse(res, { rating }, StatusCodes.CREATED);
     }
 );
-
 

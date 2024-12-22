@@ -11,9 +11,12 @@ import {emptyResponse, successResponse} from "../helper/response.helper.ts";
 import {UnauthenticatedError} from "../error/response/unauthenticated.error.ts";
 import type {AppRequest} from "../types";
 import {StatusCodes} from "http-status-codes";
+import {addMilliseconds} from "date-fns";
+import ms from "ms";
 
 // Name of the refresh token cookie.
 const APP_AUTH_COOKIE = process.env.APP_AUTH_COOKIE || '__auth';
+const refreshTokenLifetime = process.env.JWT_REFRESH_LIFETIME || '28d';
 
 export const authController = express.Router();
 
@@ -27,7 +30,13 @@ authController.post(
         const tokenPair = await login(req.body);
 
         // make the refresh token only accessible by the server (not by JS!)
-        res.cookie(APP_AUTH_COOKIE, tokenPair.refresh, { secure: true, httpOnly: true, path: '/auth' });
+        res.cookie(APP_AUTH_COOKIE, tokenPair.refresh, {
+            secure: true,
+            httpOnly: true,
+            path: '/auth',
+            sameSite: "none",
+            expires: addMilliseconds(new Date(), ms(refreshTokenLifetime))
+        });
         successResponse(res, { access_token: tokenPair.access });
     }
 );
@@ -56,7 +65,13 @@ authController.get('/refresh', async (req: AppRequest, res: Response) => {
     const tokenPair = await refresh(req.cookies[APP_AUTH_COOKIE]);
 
     // make the refresh token only accessible by the server (not by JS!)
-    res.cookie(APP_AUTH_COOKIE, tokenPair.refresh, { secure: true, httpOnly: true, path: '/auth' });
+    res.cookie(APP_AUTH_COOKIE, tokenPair.refresh, {
+        secure: true,
+        httpOnly: true,
+        path: '/auth',
+        sameSite: "none",
+        expires: addMilliseconds(new Date(), ms(refreshTokenLifetime))
+    });
     successResponse(res, { access_token: tokenPair.access });
 });
 
@@ -71,6 +86,6 @@ authController.delete('/logout', async (req: AppRequest, res: Response) => {
     await logout(req.cookies[APP_AUTH_COOKIE]);
 
     // to remove the cookie successfully, we need to use same options for the cookie (giving the name only would not suffice)
-    res.clearCookie(APP_AUTH_COOKIE, { secure: true, httpOnly: true, path: '/auth' });
+    res.clearCookie(APP_AUTH_COOKIE, { secure: true, httpOnly: true, path: '/auth', sameSite: "none" });
     emptyResponse(res);
 });

@@ -1,8 +1,9 @@
 import express from 'express';
 import {errorHandler} from "./helper/error.handler.ts";
 import {connectToMongo} from "./helper/mongo.connector.ts";
-import { eventController } from './controller/event-controler.ts';
+import { eventController } from './controller/event.controller.ts';
 import {NotFoundError} from "./error/response/not-found.error.ts";
+import cors from "cors";
 
 const port = process.env.APP_PORT;
 const appName = process.env.APP_NAME || 'unknown';
@@ -17,10 +18,11 @@ await connectToMongo();
 const app = express();
 
 // parse json body
+app.use(cors({origin: true, credentials: true}));
 app.use(express.json());
 
 // add controllers here...
-app.use('/event', eventController);
+app.use('/', eventController);
 
 // global handler for 404
 app.use((req, res, next) => {

@@ -7,8 +7,6 @@ import { BadRequestError } from "../error/response/bad-request.error.ts";
 import { NotFoundError } from "../error/response/not-found.error.ts";
 import type { IUserRating, TUserRatingModel } from "../schema/db/rating.schema.ts";
 import { FriendRequest } from "../schema/db/friend-request.schema.ts";
-import mongoose, { Types } from "mongoose";
-import { userRatingSchema } from "../schema/db/rating.schema.ts";
 
 type TAvailabilityPair = {
     email?: boolean;
@@ -69,6 +67,11 @@ export async function getIdentityByEmail(email: string): Promise<string> {
     return user._id.toString();
 }
 
+type TAvailabilityPair = {
+    email?: boolean;
+    username?: boolean;
+};
+
 /**
  * Checks the availability of the given username and/or email.
  * @param availability
@@ -125,20 +128,6 @@ export async function registerUser(data: TRegistrationData): Promise<THydratedUs
 }
 
 /**
- * Fetches friend requests for a specific user.
- * @param userId The ID of the user.
- */
-export async function getFriendRequests(userId: string) {
-    const friendRequests = await FriendRequest.find({ receiver: userId }).populate("sender", "name username").exec();
-
-    if (!friendRequests.length) {
-        throw new NotFoundError(`No friend requests found for user with ID: ${userId}.`, "friend_request");
-    }
-
-    return friendRequests.map((request) => request.toObject());
-}
-
-/**
  * Updates the profile of a user.
  * @param data
  * @param id
@@ -160,7 +149,8 @@ export async function updateProfile(data: TUpdateUserData, id: string): Promise<
         user.username = data.username;
     }
 
-    // Aktualizace dalších údajů uživatele
+    
+
     user.bio = data.bio || null;
     user.name = data.name;
     user.surname = data.surname;
@@ -200,4 +190,32 @@ export async function addUserRating(userId: string, ratingData: Partial<IUserRat
     await rating.save();
 
     return rating.toObject();
+}
+
+/**
+ * Removes a given friend from the user's friend list.
+ * @param friendId
+ * @param userId
+ */
+export async function removeFriend(friendId: Types.ObjectId, userId: Types.ObjectId): Promise<void> {
+    const friend = await User.findById(friendId);
+    const user = await User.findById(userId);
+
+    if (!user)
+        throw new UnauthenticatedError("You are logged in as a user that does not exist.");
+
+    if (!friend)
+        throw new NotFoundError(`The friend with ID "${friendId}" to remove was not found.`, "user");
+
+    if (user.friends.findIndex(f => f.equals(friendId)) === -1)
+        throw new BadRequestError("The user you are trying to remove from your friends list is not your friend.", "user:remove_stranger");
+
+    user.friends = user.friends.filter(f => !f.equals(friendId));
+    friend.friends = friend.friends.filter(f => !f.equals(userId));
+
+    user.markModified("friends");
+    friend.markModified("friends");
+
+    await user.save();
+    await friend.save();
 }

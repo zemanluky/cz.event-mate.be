@@ -20,9 +20,12 @@ type TAuthModel = Model<IAuth, {}, {}, {}, THydratedAuthDocument>
 const authSchema = new Schema<IAuth, TAuthModel>({
     _id: Types.ObjectId,
     password: { type: String, required: true },
-    role: { type: String, required: false, index: true, unique: true, default: EUserRole.User },
-    refresh_tokens: { type: [authRefreshTokenSchema], index: true, unique: true, default: [] },
+    role: { type: String, required: false, default: EUserRole.User },
+    refresh_tokens: { type: [authRefreshTokenSchema], default: [] },
 }, { _id: false });
+
+authSchema.index({ "refresh_tokens.jti": 1 }, { unique: true });
+authSchema.index({ "refresh_tokens.issued_at": 1 });
 
 export const Auth = model<IAuth, TAuthModel>('Auth', authSchema);
 export type TAuth = InferRawDocType<typeof authSchema>;
