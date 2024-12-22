@@ -215,7 +215,6 @@ export const markAttendance = async (eventId: string, userId: string) => {
     return { message: "Attendance updated successfully" };
 };
 
-// In event.service.ts
 export const removeAttendance = async (eventId: string, userId: string) => {
     // Find the event by ID
     const event = await Event.findById(eventId);

@@ -8,7 +8,7 @@ import {eventSchema, idSchema, type TEventBody} from "../schema/request/event.sc
 import mongoose from "mongoose";
 import { queryValidator } from "../helper/request.validator";
 import { filterEventsValidator, type TFilterEventsValidator } from "../schema/request/event.schema";
-import {createEvent, getEvent, getFilteredEvents, updateEvent,} from "../service/event.service.ts"
+import {createEvent, getEvent, getFilteredEvents, removeAttendance, updateEvent,} from "../service/event.service.ts"
 import { successResponse } from "../helper/response.helper.ts";
 import { markAttendance } from "../service/event.service.ts";
 
@@ -16,8 +16,8 @@ import { markAttendance } from "../service/event.service.ts";
 export const eventController = express.Router();
 
 eventController.post("/:id/attendance", loginGuard(), paramValidator(idSchema), (req: AppRequest, res: Response) => {
-    const eventId = req.params.id; 
-    const userId = req.body.userId; 
+    const eventId = req.params.id;
+    const userId = req.user?.id;
 
     markAttendance(eventId, userId)
         .then((attendance: any) => {
@@ -79,4 +79,16 @@ function next(error: unknown) {
 function markAttendance(eventId: any, userId: string) {
     throw new Error("Function not implemented.");
 }
+
+eventController.delete("/:id/attendance", loginGuard(), paramValidator(idSchema), async (req: AppRequest, res: Response) => {
+    const eventId = req.params.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }else{
+    const response = await removeAttendance(eventId, userId);
+    return res.status(200).json(response); 
+}
+});
 
