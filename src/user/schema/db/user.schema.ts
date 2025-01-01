@@ -32,7 +32,7 @@ const userSchema = new Schema<IUser, TUserModel>({
     username: { type: String, required: true, index: true, unique: true },
     bio: { type: String, required: false, default: null },
     profile_picture_path: { type: String, required: false, default: null },
-    friends: { type: [Types.ObjectId], required: false, default: [] },
+    friends: { type: [Schema.Types.ObjectId], required: false, default: [] },
     ratings: { type: [userRatingSchema], required: false, default: [] },
 });
 

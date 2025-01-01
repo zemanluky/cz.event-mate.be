@@ -18,7 +18,7 @@ export type THydratedAuthDocument = HydratedDocument<IAuth & { refresh_tokens?: 
 type TAuthModel = Model<IAuth, {}, {}, {}, THydratedAuthDocument>
 
 const authSchema = new Schema<IAuth, TAuthModel>({
-    _id: Types.ObjectId,
+    _id: Schema.Types.ObjectId,
     password: { type: String, required: true },
     role: { type: String, required: false, default: EUserRole.User },
     refresh_tokens: { type: [authRefreshTokenSchema], default: [] },
