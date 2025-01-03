@@ -16,6 +16,7 @@ export interface IEvent {
     private: boolean;
     category: Types.ObjectId;
     ownerId: Types.ObjectId;
+    attendees: Types.ObjectId[];
 }
 
 type TEventModel = Model<IEvent>;
@@ -30,6 +31,7 @@ const eventSchema = new Schema<IEvent, TEventModel>({
     location: { type: String, required: true },
     category: { type: Schema.Types.ObjectId, required: true, ref: 'Category' },
     ownerId: { type: Schema.Types.ObjectId, required: true },
+    attendees: { type: [Schema.Types.ObjectId], default: [] },
 });
 
 export const Event = model<IEvent, TEventModel>('Event', eventSchema);

@@ -5,7 +5,11 @@ import {zodObjectId} from "../../utils/validation.utils.ts";
 
 export const idSchema = z.string().refine((id) => mongoose.Types.ObjectId.isValid(id), {
   message: "Invalid ObjectId",
+}).transform((val) => new Types.ObjectId(val));
+export const eventDetailParams = z.object({
+    id: idSchema
 });
+export type TEventDetailParams = z.infer<typeof eventDetailParams>;
 
 export const eventSchema = z.object({
     name: z.string().trim().min(1),

@@ -7,6 +7,7 @@ import cors from "cors";
 import {categoryController} from "./controller/category.controller.ts";
 import {loginGuard} from "./helper/login-guard.ts";
 import {seedCategories} from "./helper/category.seeder.ts";
+import {eventAttendanceController} from "./controller/event-attendance.controller.ts";
 
 const port = process.env.APP_PORT;
 const appName = process.env.APP_NAME || 'unknown';
@@ -27,6 +28,7 @@ app.use(express.json());
 
 // add controllers here...
 app.use('/category', loginGuard(), categoryController);
+app.use('/:id/attendance', loginGuard(), eventAttendanceController);
 app.use('/', eventController);
 
 // global handler for 404

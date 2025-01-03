@@ -122,12 +122,15 @@ async function addEventCategory(event: THydratedEventDocument) {
 }
 
 /**
- * Gets the author detail of a single event.
+ * Gets the user details of the author and attendees of a given event.
  * @param event
  */
-async function addAuthorDetail(event: THydratedEventDocument): Promise<Object> {
+async function addUserDetails(event: THydratedEventDocument): Promise<{ author: Object, attendees: Array<Object> }> {
+    const attendeeIds = event.attendees.map(a => a.toString());
+    const usersToFetch = R.unique([event.ownerId.toString(), ...attendeeIds]);
+
     const authorsResponse: TResponse<Record<string, any>> = await fetch(
-        microserviceUrl('user', 'authors', { authorIds: event.ownerId.toString() }),
+        microserviceUrl('user', 'authors', { authorIds: usersToFetch.join(',') }),
         {headers: getFetchHeaders()}
     ).then(res => res.json());
 
@@ -137,10 +140,13 @@ async function addAuthorDetail(event: THydratedEventDocument): Promise<Object> {
     if (!(event.ownerId.toString() in authorsResponse.data))
         throw new ServerError('Invalid event object.');
 
-    return authorsResponse.data[event.ownerId.toString()];
+    return {
+        author: authorsResponse.data[event.ownerId.toString()],
+        attendees: Object.values(authorsResponse.data).map((user: any) => R.omit(user, ['ratings', 'average_rating']))
+    };
 }
 
-type TEVentDetail = Omit<IEvent, 'ownerId'|'category'> & { author: any, category: ICategory };
+type TEVentDetail = Omit<IEvent, 'ownerId'|'attendees'|'category'> & { author: any, attendees: Array<Object>, category: ICategory };
 
 /**
  * Adds exported author and category detail to a given event object.
@@ -148,13 +154,14 @@ type TEVentDetail = Omit<IEvent, 'ownerId'|'category'> & { author: any, category
  */
 async function addEventDetail(event: THydratedEventDocument): Promise<TEVentDetail> {
     const eventWithCategory = await addEventCategory(event);
-    const author = await addAuthorDetail(event);
+    const { author, attendees } = await addUserDetails(event);
 
     const eventObject = R.omit(event.toObject(), ['category', 'ownerId']);
 
     return {
         category: eventWithCategory.category.toObject(),
         ...eventObject,
+        attendees,
         author
     }
 }
@@ -184,12 +191,15 @@ export async function createEvent(event: TEventBody, userId: string): Promise<TE
             'event:invalid_category'
         );
 
+    const creatorObjectId = new Types.ObjectId(userId);
+
     // create new event
     const newEvent = new Event({
         ...event,
         category: event.category,
         description: event.description ?? null, // set description to null if it is not provided
-        ownerId: new Types.ObjectId(userId)
+        attendees: [creatorObjectId],
+        ownerId: creatorObjectId
     });
 
     return addEventDetail(await newEvent.save());
