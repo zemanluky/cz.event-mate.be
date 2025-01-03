@@ -1,4 +1,4 @@
-import mongoose, {Types} from "mongoose";
+import mongoose, {type Document, type HydratedDocument, Types} from "mongoose";
 import { NotFoundError } from "../error/response/not-found.error";
 import { getFetchHeaders, microserviceUrl } from "../helper/microservice.url";
 import {Event, type IEvent, type THydratedEventDocument} from "../schema/db/event.schema";
@@ -7,6 +7,9 @@ import type {TResponse} from "../helper/response.helper.ts";
 import {ServerError} from "../error/response/server.error.ts";
 import {BadRequestError} from "../error/response/bad-request.error.ts";
 import {PermissionError} from "../error/response/permission.error.ts";
+import {exists} from "./category.service.ts";
+import type {ICategory, THydratedCategoryDocument} from "../schema/db/category.schema.ts";
+import * as R from "remeda";
 
 /**
  * Gets a filtered and paginated list of events.
@@ -111,10 +114,18 @@ export async function getFilteredEvents(queryFilter: TFilterEventsValidator, use
 }
 
 /**
- * Adds author detail to an event object.
+ * Adds category detail to an event object.
  * @param event
  */
-async function addAuthorDetail(event: THydratedEventDocument): Promise<IEvent & { author: any }> {
+async function addEventCategory(event: THydratedEventDocument) {
+    return event.populate<{ category: THydratedCategoryDocument }>('category');
+}
+
+/**
+ * Gets the author detail of a single event.
+ * @param event
+ */
+async function addAuthorDetail(event: THydratedEventDocument): Promise<Object> {
     const authorsResponse: TResponse<Record<string, any>> = await fetch(
         microserviceUrl('user', 'authors', { authorIds: event.ownerId.toString() }),
         {headers: getFetchHeaders()}
@@ -126,9 +137,25 @@ async function addAuthorDetail(event: THydratedEventDocument): Promise<IEvent & 
     if (!(event.ownerId.toString() in authorsResponse.data))
         throw new ServerError('Invalid event object.');
 
+    return authorsResponse.data[event.ownerId.toString()];
+}
+
+type TEVentDetail = Omit<IEvent, 'ownerId'|'category'> & { author: any, category: ICategory };
+
+/**
+ * Adds exported author and category detail to a given event object.
+ * @param event
+ */
+async function addEventDetail(event: THydratedEventDocument): Promise<TEVentDetail> {
+    const eventWithCategory = await addEventCategory(event);
+    const author = await addAuthorDetail(event);
+
+    const eventObject = R.omit(event.toObject(), ['category', 'ownerId']);
+
     return {
-        ...event.toObject(),
-        author: authorsResponse.data[event.ownerId.toString()]
+        category: eventWithCategory.category.toObject(),
+        ...eventObject,
+        author
     }
 }
 
@@ -136,13 +163,12 @@ async function addAuthorDetail(event: THydratedEventDocument): Promise<IEvent & 
  * Gets detail of a single event.
  * @param id
  */
-export async function getEvent(id: string): Promise<IEvent & { author: any }> {
+export async function getEvent(id: string): Promise<TEVentDetail> {
     const event = await Event.findById(id);
 
-    if (!event)
-        throw new NotFoundError(`Could not find event with ID: ${id}.`, "event");
+    if (!event) throw new NotFoundError(`Could not find event with ID: ${id}.`, "event");
 
-    return addAuthorDetail(event);
+    return addEventDetail(event);
 }
 
 /**
@@ -150,15 +176,23 @@ export async function getEvent(id: string): Promise<IEvent & { author: any }> {
  * @param event
  * @param userId
  */
-export async function createEvent(event: TEventBody, userId: string): Promise<IEvent> {
+export async function createEvent(event: TEventBody, userId: string): Promise<TEVentDetail> {
+    // first we have to check the category actually exists
+    if (!(await exists(event.category)))
+        throw new BadRequestError(
+            `Category with id '${event.category}' does not exist and therefore an event with such category may not be created.`,
+            'event:invalid_category'
+        );
+
+    // create new event
     const newEvent = new Event({
         ...event,
-        description: event.description ?? null,
-        ownerId: new Types.ObjectId(userId),
-        category: "general" // TODO: implement saving of the category with checking the existence of the category
+        category: event.category,
+        description: event.description ?? null, // set description to null if it is not provided
+        ownerId: new Types.ObjectId(userId)
     });
 
-    return addAuthorDetail(await newEvent.save());
+    return addEventDetail(await newEvent.save());
 }
 
 /**
@@ -167,18 +201,28 @@ export async function createEvent(event: TEventBody, userId: string): Promise<IE
  * @param updates
  * @param userId
  */
-export async function updateEvent(id: string, updates: TEventBody, userId: string): Promise<IEvent> {
+export async function updateEvent(id: string, updates: TEventBody, userId: string): Promise<TEVentDetail> {
     const event = await Event.findById(id);
 
+    // checking if the event exists
     if (!event)
         throw new NotFoundError(`Could not find event with ID: ${id}.`, "event");
 
+    // checking if the current user may edit the event
     if (!event.ownerId.equals(userId))
         throw new PermissionError('You are not authorized to update this event.', 'event:write');
 
+    // optionally check if the category is updated to an existing category
+    if (!event.category.equals(updates.category) && !(await exists(updates.category)))
+        throw new BadRequestError(
+            `Category with id '${event.category}' does not exist and therefore an event with such category may not be updated.`,
+            'event:invalid_category'
+        );
+
+    // finally update the event
     const updatedEvent = await Event.findByIdAndUpdate(
         id, {...updates, description: updates.description ?? null}, {new: true}
     );
 
-    return addAuthorDetail(updatedEvent!);
+    return addEventDetail(updatedEvent!);
 }

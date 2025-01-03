@@ -12,6 +12,7 @@ export const eventSchema = z.object({
     description: z.string().nullable().optional(),
     date: z.coerce.date().min(startOfToday()),
     location: z.string().trim().min(1),
+    category: z.string().pipe(zodObjectId).transform(val => new Types.ObjectId(val)),
     private: z.boolean()
 });
 export type TEventBody = z.infer<typeof eventSchema>;
