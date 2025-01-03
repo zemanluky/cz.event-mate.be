@@ -91,26 +91,7 @@ export async function getFilteredEvents(queryFilter: TFilterEventsValidator, use
     if (!authorsResponse.success)
         throw new ServerError(`Failed to fetch authors list of retrieved events due to an error on the microservice: ${authorsResponse.error.message}`);
 
-    const eventsWithAuthors: Array<IEvent & { author: any }> = [];
-
-    for (const event of events) {
-        if (!(event.ownerId.toString() in authorsResponse.data))
-            continue;
-
-        if (
-            rating && authorsResponse.data[event.ownerId.toString()].average_rating !== null
-            && authorsResponse.data[event.ownerId.toString()].average_rating < rating
-        ) {
-            continue;
-        }
-
-        eventsWithAuthors.push({
-            ...event.toObject(),
-            author: authorsResponse.data[event.ownerId.toString()]
-        });
-    }
-
-    return eventsWithAuthors;
+    return await Promise.all(events.map(async (event) => addEventDetail(event)));
 }
 
 /**
