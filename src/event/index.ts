@@ -26,6 +26,7 @@ app.use(cors({origin: true, credentials: true}));
 app.use(express.json());
 
 // add controllers here...
+app.use('/category', loginGuard(), categoryController);
 app.use('/', eventController);
 
 // global handler for 404
