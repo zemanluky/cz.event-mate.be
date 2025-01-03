@@ -1,14 +1,20 @@
-import {type HydratedDocument, type InferRawDocType, model, type Model, Schema, Types} from "mongoose";
-import * as mongoose from "mongoose";
+import {
+    type HydratedDocument,
+    type InferRawDocType,
+    model,
+    type Model,
+    Schema,
+    Types
+} from "mongoose";
 
 export interface IEvent {
-    _id: mongoose.Types.ObjectId;
+    _id: Types.ObjectId;
     name: string;
     description?: string|null;
     date: Date;
     location: string;
     private: boolean;
-    category: string;
+    category: Types.ObjectId;
     ownerId: Types.ObjectId;
 }
 
@@ -22,7 +28,7 @@ const eventSchema = new Schema<IEvent, TEventModel>({
     date: { type: Date, required: true },
     private: { type: Boolean, required: true }, 
     location: { type: String, required: true },
-    category: { type: String, required: true },
+    category: { type: Schema.Types.ObjectId, required: true, ref: 'Category' },
     ownerId: { type: Schema.Types.ObjectId, required: true },
 });
 
