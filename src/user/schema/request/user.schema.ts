@@ -35,8 +35,7 @@ export const userIdParamSchema = z.object({
     id: z.string().trim().pipe(zodObjectId).transform(val => new Types.ObjectId(val))
 });
 
-export const userSchemaForRating = z.object({
-    author: z.string(),
+export const ratingBody = z.object({
     starRating: z.number().min(0).max(5),
     comment: z.string().optional(),
 });
@@ -46,6 +45,7 @@ export type TRegistrationData = z.infer<typeof registerUserBodySchema>;
 export type TUpdateUserData = z.infer<typeof updateUserSchema>;
 export type TAvailabilityQuery = z.infer<typeof verifyAvailabilityQuerySchema>;
 export type TIdentityByEmailParams = z.infer<typeof identityByEmailParamSchema>;
+export type TRatingBody = z.infer<typeof ratingBody>;
 
 export const authorsListQuerySchema = z.object({
     authorIds: z.string()

@@ -2,7 +2,7 @@ import express, {type Response} from "express";
 import {microserviceGuard} from "../helper/microservice.url.ts";
 import type {AppRequest} from "../types";
 import {authorsListQuerySchema, type TAuthorListQuery, type TUserIdParam, userIdParamSchema} from "../schema/request/user.schema.ts";
-import {getAuthorsList, getUser, getUserFriends, getUserRatings} from "../service/user.service.ts";
+import {getAuthorsList, getUser, getUserFriends} from "../service/user.service.ts";
 import {successResponse} from "../helper/response.helper.ts";
 import * as R from 'remeda';
 import {exportAuthorProfile, type TAuthor} from "../utils/user.utils.ts";
@@ -44,18 +44,5 @@ userController.get(
     async (req: AppRequest<TUserIdParam>, res: Response) => {
         const user = await getUser(req.parsedParams!.id);
         successResponse(res, user);
-    }
-);
-
-/**
- * Gets user rating by their ID.
- */
-
-userController.get(
-    "/:id/rating", loginGuard(), paramValidator(userIdParamSchema),
-    async (req: AppRequest<TUserIdParam>, res: Response) => {
-        const userId = req.parsedParams!.id;
-        const ratings = await getUserRatings(userId);
-        successResponse(res, ratings);
     }
 );

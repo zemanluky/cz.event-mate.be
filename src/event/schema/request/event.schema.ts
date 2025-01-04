@@ -34,3 +34,9 @@ export const filterEventsValidator = z.object({
 });
 
 export type TFilterEventsValidator = z.infer<typeof filterEventsValidator>;
+
+export const checkAttendanceQuery = z.object({
+    authorId: idSchema,
+    userId: idSchema
+});
+export type TAttendanceQuery = z.infer<typeof checkAttendanceQuery>;

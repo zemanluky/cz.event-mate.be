@@ -6,6 +6,8 @@ import {NotFoundError} from "./error/response/not-found.error.ts";
 import cors from "cors";
 import { friendRequestController } from './controller/friend-request.controller.ts';
 import {userController} from "./controller/user.controller.ts";
+import {userRatingController} from "./controller/user-rating.controller.ts";
+import {loginGuard} from "./helper/login-guard.ts";
 
 const port = process.env.APP_PORT;
 const appName = process.env.APP_NAME || 'unknown';
@@ -25,6 +27,7 @@ app.use(express.json());
 
 // add controllers here...
 app.use('/friend-request', friendRequestController); // route /user/friend-request
+app.use('/:id/rating', loginGuard(), userRatingController); // route /user/:id/rating
 app.use('/', userManagementController); // route /user
 app.use('/', userController); // route /user
 

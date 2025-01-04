@@ -2,16 +2,31 @@ import express, { type Request, type Response } from "express";
 import { BadRequestError } from "../error/response/bad-request.error";
 import { Event, type IEvent } from "../schema/db/event.schema";
 import { loginGuard } from "../helper/login-guard";
-import { bodyValidator, paramValidator } from "../helper/request.validator";
+import { bodyValidator } from "../helper/request.validator";
 import type { AppRequest } from "../types";
-import {eventSchema, idSchema, type TEventBody} from "../schema/request/event.schema";
-import mongoose from "mongoose";
+import {
+    checkAttendanceQuery,
+    eventSchema,
+    type TAttendanceQuery,
+    type TEventBody
+} from "../schema/request/event.schema";
 import { queryValidator } from "../helper/request.validator";
 import { filterEventsValidator, type TFilterEventsValidator } from "../schema/request/event.schema";
 import {createEvent, getEvent, getFilteredEvents, updateEvent,} from "../service/event.service.ts"
 import { successResponse } from "../helper/response.helper.ts";
+import {microserviceGuard} from "../helper/microservice.url.ts";
+import {hasUserAttendedAnyAuthorEvent} from "../service/event-attendance.service.ts";
 
 export const eventController = express.Router();
+
+/** Checks whether a given user has attended any event. */
+eventController.get(
+    '/check-attendance', microserviceGuard(), queryValidator(checkAttendanceQuery),
+    async (req: AppRequest<never,TAttendanceQuery>, res: Response) => {
+        const hasAttended = await hasUserAttendedAnyAuthorEvent(req.parsedQuery!.authorId, req.parsedQuery!.userId);
+        successResponse(res, { hasAttended });
+    }
+)
 
 eventController.get('/',
     loginGuard(), queryValidator(filterEventsValidator),
@@ -46,10 +61,3 @@ eventController.put(
         successResponse(res, updatedEvent);
     }
 );
-
-// Not oficially part of the API, just for testing purposes
-eventController.get("/list-all", async (req: Request, res: Response) => {
-	const events = await Event.find();
-
-	res.status(200).send(events);
-});

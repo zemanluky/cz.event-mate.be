@@ -140,37 +140,3 @@ export async function removeFriend(friendId: Types.ObjectId, userId: Types.Objec
     await user.save();
     await friend.save();
 }
-
-/**
- * Adds a rating for a user.
- * @param userId
- * @param ratingData
- */
-export async function addUserRating(userId: string, ratingData: Partial<IUserRating>): Promise<IUserRating> {
-    const user = await User.findById(userId);
-    if (!user) {
-        throw new NotFoundError(`User with ID ${userId} not found.`, "user");
-    }
-
-    if (!ratingData.author || !Types.ObjectId.isValid(ratingData.author)) {
-        throw new BadRequestError("Invalid author ID provided.", "rating");
-    }
-
-    if (!ratingData.starRating || ratingData.starRating < 0 || ratingData.starRating > 5) {
-        throw new BadRequestError("Star rating must be between 0 and 5.", "rating");
-    }
-
-    const UserRatingModel = mongoose.model<IUserRating, TUserRatingModel>("UserRating", userRatingSchema);
-
-    const rating = new UserRatingModel({
-        ...ratingData,
-        createdAt: new Date(),
-    });
-
-    user.ratings.push(rating._id);
-    await user.save();
-
-    await rating.save();
-
-    return rating.toObject();
-}

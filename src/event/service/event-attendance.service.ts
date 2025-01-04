@@ -107,3 +107,18 @@ export async function leaveEvent(eventId: Types.ObjectId, userId: string): Promi
     event.markModified('attendees');
     await event.save();
 }
+
+/**
+ * Checks whether a given user has attended any event of a given user.
+ * @param author
+ * @param user
+ */
+export async function hasUserAttendedAnyAuthorEvent(author: Types.ObjectId, user: Types.ObjectId): Promise<boolean> {
+    const numberOfAttendedEvents = await Event.countDocuments({
+        ownerId: author,
+        attendees: { $elemMatch: { $eq: user } },
+        date: { $lte: new Date() }
+    });
+
+    return numberOfAttendedEvents > 0;
+}

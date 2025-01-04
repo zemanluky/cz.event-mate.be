@@ -1,7 +1,6 @@
 import {type IUser, type THydratedUserDocument, User} from "../schema/db/user.schema.ts";
 import {NotFoundError} from "../error/response/not-found.error.ts";
 import {Types} from "mongoose";
-import type {IUserRating, THydratedRatingDocument} from "../schema/db/rating.schema.ts";
 
 /**
  * Gets a user by their ID.
@@ -14,19 +13,6 @@ export async function getUser(id: Types.ObjectId): Promise<IUser> {
 
     return user.toObject();
 }
-
-/**
- * Gets the ratings of a specific user by their ID.
- * @param userId The ID of the user whose ratings will be fetched.
- */
-export const getUserRatings = async (userId: Types.ObjectId): Promise<IUserRating[]> => {
-    const user: THydratedUserDocument|null = await User.findById(userId).populate("ratings").exec();
-
-    if (!user)
-        throw new NotFoundError(`User with ID ${userId} not found.`, "user");
-
-    return user.ratings.map((rating: THydratedRatingDocument) => rating.toObject());
-};
 
 /**
  * Gets details of multiple users by their IDs.
