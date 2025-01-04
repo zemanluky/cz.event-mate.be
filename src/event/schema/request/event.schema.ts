@@ -40,3 +40,8 @@ export const checkAttendanceQuery = z.object({
     userId: idSchema
 });
 export type TAttendanceQuery = z.infer<typeof checkAttendanceQuery>;
+
+export const monthOverviewQuery = z.object({
+    date: z.coerce.date().optional().default(startOfToday())
+});
+export type TMonthOverviewQuery = z.infer<typeof monthOverviewQuery>;

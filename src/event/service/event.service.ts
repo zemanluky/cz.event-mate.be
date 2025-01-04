@@ -10,6 +10,7 @@ import {PermissionError} from "../error/response/permission.error.ts";
 import {exists} from "./category.service.ts";
 import type {ICategory, THydratedCategoryDocument} from "../schema/db/category.schema.ts";
 import * as R from "remeda";
+import {endOfMonth, getDate, getDaysInMonth, startOfMonth} from "date-fns";
 
 /**
  * Gets a filtered and paginated list of events.
@@ -91,7 +92,48 @@ export async function getFilteredEvents(queryFilter: TFilterEventsValidator, use
     if (!authorsResponse.success)
         throw new ServerError(`Failed to fetch authors list of retrieved events due to an error on the microservice: ${authorsResponse.error.message}`);
 
-    return await Promise.all(events.map(async (event) => addEventDetail(event)));
+    const result = [];
+
+    for (const event of events) {
+        const eventWithDetail = await addEventDetail(event);
+
+        // filter by rating
+        if (rating !== undefined && eventWithDetail.author.average_rating < rating)
+            continue;
+
+        result.push(eventWithDetail);
+    }
+
+    return result;
+}
+
+type TUserMonthOverview = Record<number, Array<TEVentDetail>>;
+
+/**
+ * Gets user's month overview of events they are attending.
+ * @param userId
+ * @param date
+ */
+export async function getUsersMonthOverview(userId: string, date: Date): Promise<TUserMonthOverview> {
+    // initialize month overview object
+    const monthOverview: TUserMonthOverview = {};
+
+    for (let i = 0; i < getDaysInMonth(date); i++)
+        monthOverview[i + 1] = [];
+
+    const usersEvents = await Event.find({
+        attendees: { $elemMatch: { $eq: new Types.ObjectId(userId) } },
+        date: { $gte: startOfMonth(date), $lte: endOfMonth(date) }
+    });
+
+    const userEventsWithDetail = await Promise.all(usersEvents.map(addEventDetail));
+
+    for (const event of userEventsWithDetail) {
+        const day = getDate(event.date);
+        monthOverview[day].push(event);
+    }
+
+    return monthOverview;
 }
 
 /**

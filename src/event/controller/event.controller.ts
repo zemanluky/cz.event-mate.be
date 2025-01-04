@@ -6,13 +6,13 @@ import { bodyValidator } from "../helper/request.validator";
 import type { AppRequest } from "../types";
 import {
     checkAttendanceQuery,
-    eventSchema,
+    eventSchema, monthOverviewQuery,
     type TAttendanceQuery,
-    type TEventBody
+    type TEventBody, type TMonthOverviewQuery
 } from "../schema/request/event.schema";
 import { queryValidator } from "../helper/request.validator";
 import { filterEventsValidator, type TFilterEventsValidator } from "../schema/request/event.schema";
-import {createEvent, getEvent, getFilteredEvents, updateEvent,} from "../service/event.service.ts"
+import {createEvent, getEvent, getFilteredEvents, getUsersMonthOverview, updateEvent,} from "../service/event.service.ts"
 import { successResponse } from "../helper/response.helper.ts";
 import {microserviceGuard} from "../helper/microservice.url.ts";
 import {hasUserAttendedAnyAuthorEvent} from "../service/event-attendance.service.ts";
@@ -26,7 +26,15 @@ eventController.get(
         const hasAttended = await hasUserAttendedAnyAuthorEvent(req.parsedQuery!.authorId, req.parsedQuery!.userId);
         successResponse(res, { hasAttended });
     }
-)
+);
+
+eventController.get(
+    '/month-overview', loginGuard(), queryValidator(monthOverviewQuery),
+    async (req: AppRequest<never,TMonthOverviewQuery>, res: Response) => {
+        const monthOverview = await getUsersMonthOverview(req.user!.id, req.parsedQuery!.date);
+        successResponse(res, monthOverview);
+    }
+);
 
 eventController.get('/',
     loginGuard(), queryValidator(filterEventsValidator),
