@@ -34,9 +34,12 @@ export async function getFilteredEvents(queryFilter: TFilterEventsValidator, use
 
     // filter events only accessible to the user
     if (filter === 'friends-only') {
-        if (authorId && friendListResponse.data.includes(authorId)) {
+        // user is filtering private events of another user - they must be their friend
+        // or the user is filtering their own private events
+        if (authorId && (friendListResponse.data.includes(authorId) || authorId === userId)) {
             baseQuery.where({ private: true, ownerId: new Types.ObjectId(authorId) });
         }
+        // the author filter is not set, so we are filtering private events of the user's friends
         else if (!authorId) {
             baseQuery.where({ private: true, ownerId: { $in: friendListResponse.data.map(id => new Types.ObjectId(id)) } });
         }
@@ -46,12 +49,29 @@ export async function getFilteredEvents(queryFilter: TFilterEventsValidator, use
         }
     }
     else if (filter === 'public-only') {
-        baseQuery.where({ private: false, ownerId: { $ne: userId } });
-    }
-    else {
-        if (authorId && !friendListResponse.data.includes(authorId)) {
-            baseQuery.where({ private: true, ownerId: new Types.ObjectId(authorId) });
+        // if we are filtering events by the author
+        if (authorId) {
+            baseQuery.where({ private: false, ownerId: new Types.ObjectId(authorId) });
         }
+        // we are filtering all public events, but we don't probably want to get user's own events
+        else {
+            baseQuery.where({ private: false, ownerId: { $ne: userId } });
+        }
+    }
+    // filtering private and non-private events
+    else {
+        // we are filtering all events of a given user
+        if (authorId) {
+            // when the users are friends, we can filter both public and private events of the given user
+            if (friendListResponse.data.includes(authorId)) {
+                baseQuery.where({ ownerId: new Types.ObjectId(authorId) });
+            }
+            // otherwise we can only filter public events of the given user
+            else {
+                baseQuery.where({ private: false, ownerId: new Types.ObjectId(authorId) });
+            }
+        }
+        // we are filtering events of all users, so just filter out the user's own events and include private events of their friends
         else {
             baseQuery.or([
                 { private: false, ownerId: { $ne: userId } },
