@@ -69,3 +69,12 @@ eventController.put(
         successResponse(res, updatedEvent);
     }
 );
+
+// Delete an event
+eventController.delete(
+	"/:id", loginGuard(),
+	async (req: Request, res: Response) => {
+		await Event.deleteOne({ _id: req.params.id });
+		successResponse(res, { message: "Event deleted successfully" });
+	}
+);
