@@ -226,7 +226,7 @@ export async function getEvent(id: string): Promise<TEVentDetail> {
  * @param event
  * @param userId
  */
-export async function createEvent(event: TEventBody, userId: string): Promise<TEVentDetail> {
+export async function createEvent(event: TEventBody, userId: string, paths: [string]): Promise<TEVentDetail> {
     // first we have to check the category actually exists
     if (!(await exists(event.category)))
         throw new BadRequestError(
@@ -242,9 +242,10 @@ export async function createEvent(event: TEventBody, userId: string): Promise<TE
         category: event.category,
         description: event.description ?? null, // set description to null if it is not provided
         attendees: [creatorObjectId],
-        ownerId: creatorObjectId
+        ownerId: creatorObjectId,
+        image_paths: paths
     });
-
+    
     return addEventDetail(await newEvent.save());
 }
 
