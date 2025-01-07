@@ -24,7 +24,6 @@ const authSchema = new Schema<IAuth, TAuthModel>({
     refresh_tokens: { type: [authRefreshTokenSchema], default: [] },
 }, { _id: false });
 
-authSchema.index({ "refresh_tokens.jti": 1 }, { unique: true });
 authSchema.index({ "refresh_tokens.issued_at": 1 });
 
 export const Auth = model<IAuth, TAuthModel>('Auth', authSchema);
