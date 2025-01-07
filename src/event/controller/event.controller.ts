@@ -19,6 +19,21 @@ import {hasUserAttendedAnyAuthorEvent} from "../service/event-attendance.service
 
 export const eventController = express.Router();
 
+const multer  = require('multer')
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'uploads/'); // Specify the destination directory
+    },
+    filename: function (any, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9); // Generate a unique suffix
+      const newFilename = 'event-image-' + uniqueSuffix + file.originalname; // Specify the filename
+      cb(null, newFilename); // Set the new filename
+    }
+  });
+
+const upload = multer({ storage: storage });
+
 /** Checks whether a given user has attended any event. */
 eventController.get(
     '/check-attendance', microserviceGuard(), queryValidator(checkAttendanceQuery),
@@ -54,9 +69,9 @@ eventController.get("/:id",
 
 // Create a new event
 eventController.post(
-    "/", loginGuard(), bodyValidator(eventSchema),
+    "/", loginGuard(), upload.array('image', 10), bodyValidator(eventSchema),
     async (req: AppRequest<never,never,TEventBody>, res: Response) => {
-        const newEvent = await createEvent(req.body, req.user!.id);
+        const newEvent = await createEvent(req.body, req.user!.id, req.files.map((file: any) => '/event/files/'+file.filename));
         successResponse(res, newEvent);
     }
 );

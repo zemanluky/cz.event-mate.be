@@ -19,4 +19,5 @@ export interface AppRequest<
         id: string,
         role: EUserRole
     } | null
+    file: any
 }
