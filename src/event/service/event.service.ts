@@ -225,8 +225,9 @@ export async function getEvent(id: string): Promise<TEVentDetail> {
  * Creates new event with given data.
  * @param event
  * @param userId
+ * @param paths
  */
-export async function createEvent(event: TEventBody, userId: string, paths: [string]): Promise<TEVentDetail> {
+export async function createEvent(event: TEventBody, userId: string, paths: Array<string>): Promise<TEVentDetail> {
     // first we have to check the category actually exists
     if (!(await exists(event.category)))
         throw new BadRequestError(

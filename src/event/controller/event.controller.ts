@@ -16,10 +16,9 @@ import {createEvent, getEvent, getFilteredEvents, getUsersMonthOverview, updateE
 import { successResponse } from "../helper/response.helper.ts";
 import {microserviceGuard} from "../helper/microservice.url.ts";
 import {hasUserAttendedAnyAuthorEvent} from "../service/event-attendance.service.ts";
+import multer from "multer";
 
 export const eventController = express.Router();
-
-const multer  = require('multer')
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -71,7 +70,10 @@ eventController.get("/:id",
 eventController.post(
     "/", loginGuard(), upload.array('image', 10), bodyValidator(eventSchema),
     async (req: AppRequest<never,never,TEventBody>, res: Response) => {
-        const newEvent = await createEvent(req.body, req.user!.id, req.files.map((file: any) => '/event/files/'+file.filename));
+        const newEvent = await createEvent(
+            req.body, req.user!.id,
+            (req.files as Array<Express.Multer.File>).map((file) => '/event/files/' + file.filename)
+        );
         successResponse(res, newEvent);
     }
 );
