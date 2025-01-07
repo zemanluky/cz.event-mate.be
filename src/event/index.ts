@@ -27,6 +27,7 @@ app.use(cors({origin: true, credentials: true}));
 app.use(express.json());
 
 // add controllers here...
+app.use('/files', express.static('uploads'));
 app.use('/category', loginGuard(), categoryController);
 app.use('/:id/attendance', loginGuard(), eventAttendanceController);
 app.use('/', eventController);

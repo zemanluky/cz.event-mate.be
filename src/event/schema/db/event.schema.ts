@@ -17,6 +17,7 @@ export interface IEvent {
     category: Types.ObjectId;
     ownerId: Types.ObjectId;
     attendees: Types.ObjectId[];
+    image_paths: string[];
 }
 
 type TEventModel = Model<IEvent>;
@@ -32,6 +33,7 @@ const eventSchema = new Schema<IEvent, TEventModel>({
     category: { type: Schema.Types.ObjectId, required: true, ref: 'Category' },
     ownerId: { type: Schema.Types.ObjectId, required: true },
     attendees: { type: [Schema.Types.ObjectId], default: [] },
+    image_paths: { type: [String], default: [] },
 });
 
 export const Event = model<IEvent, TEventModel>('Event', eventSchema);
