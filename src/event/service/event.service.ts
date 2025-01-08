@@ -63,7 +63,7 @@ export async function getFilteredEvents(queryFilter: TFilterEventsValidator, use
         // we are filtering all events of a given user
         if (authorId) {
             // when the users are friends, we can filter both public and private events of the given user
-            if (friendListResponse.data.includes(authorId)) {
+            if (friendListResponse.data.includes(authorId) || authorId === userId) {
                 baseQuery.where({ ownerId: new Types.ObjectId(authorId) });
             }
             // otherwise we can only filter public events of the given user
