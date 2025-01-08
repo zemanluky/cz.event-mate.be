@@ -1,7 +1,7 @@
 import { z } from "zod";
 import mongoose, {Types} from "mongoose";
 import {startOfToday} from "date-fns";
-import {zodObjectId} from "../../utils/validation.utils.ts";
+import {coerceBoolean, zodObjectId} from "../../utils/validation.utils.ts";
 
 export const idSchema = z.string().refine((id) => mongoose.Types.ObjectId.isValid(id), {
   message: "Invalid ObjectId",
@@ -17,7 +17,7 @@ export const eventSchema = z.object({
     date: z.coerce.date().min(startOfToday()),
     location: z.coerce.string().trim().min(1),
     category: z.coerce.string().pipe(zodObjectId).transform(val => new Types.ObjectId(val)),
-    private: z.coerce.boolean(),
+    private: z.preprocess(coerceBoolean, z.boolean()),
     image_paths: z.array(z.string()).default([]),
 });
 export type TEventBody = z.infer<typeof eventSchema>;
