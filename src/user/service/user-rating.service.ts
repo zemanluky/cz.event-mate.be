@@ -46,7 +46,7 @@ export async function addUserRating(userId: Types.ObjectId, ratingData: TRatingB
 
     // check if the user has already attended any event of the rated user
     const hasAttendedAnyEventResponse: TResponse<{ hasAttended: boolean }> = await fetch(
-        microserviceUrl('event', 'check-attendance', { authorId: userId.toString(), userId: authorId.toString() }),
+        microserviceUrl('event', '/check-attendance', { authorId: userId.toString(), userId: authorId.toString() }),
         {headers: getFetchHeaders()}
     ).then(res => res.json());
 
