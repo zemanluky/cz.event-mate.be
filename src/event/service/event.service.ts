@@ -58,6 +58,11 @@ export async function getFilteredEvents(queryFilter: TFilterEventsValidator, use
             baseQuery.where({ private: false, ownerId: { $ne: userId } });
         }
     }
+    else if (filter === 'my-events') {
+        if (!authorId){
+            baseQuery.where({ ownerId: new Types.ObjectId(userId) });
+        }
+    }
     // filtering private and non-private events
     else {
         // we are filtering all events of a given user

@@ -29,7 +29,7 @@ export const filterEventsValidator = z.object({
     dateEnd: z.coerce.date().optional(), //date
     rating: z.coerce.number().optional(), // number
     category: z.string().pipe(zodObjectId).transform(val => new Types.ObjectId(val)).optional(), //string
-    filter: z.enum(['friends-only', 'public-only', 'all']).default('all'),
+    filter: z.enum(['friends-only', 'public-only', 'all', 'my-events']).default('all'),
     pageSize: z.coerce.number().min(1).default(25), //number
     pageNumber: z.coerce.number().min(1).default(1), //number
 });
