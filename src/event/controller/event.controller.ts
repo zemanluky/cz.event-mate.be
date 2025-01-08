@@ -59,7 +59,7 @@ eventController.get(
 );
 
 eventController.get('/',
-    queryValidator(filterEventsValidator),
+    loginGuard(false), queryValidator(filterEventsValidator),
     async (req: AppRequest<never,never,TFilterEventsValidator>, res: Response) => {
         const events = await getFilteredEvents(req.parsedQuery!, req.user?.id);
         successResponse(res, events);

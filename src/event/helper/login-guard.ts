@@ -7,7 +7,7 @@ import type {AppRequest} from "../types";
 /**
  * Middleware to check if the user is authenticated.
  */
-export function loginGuard() {
+export function loginGuard(required: boolean = true) {
 	return (req: AppRequest, res: Response, next: NextFunction) => {
 		// the request is already authenticated - used by microservice
 		if (req.isMicroserviceRequest === true) return next();
@@ -15,7 +15,11 @@ export function loginGuard() {
 		const authHeader = req.headers.authorization;
 
 		if (!authHeader || !authHeader.startsWith('Bearer ')) {
-			return next(new UnauthenticatedError('Could not find the authorization header.'));
+			if (required) {
+				return next(new UnauthenticatedError('Could not find the authorization header.'));
+			}
+
+			return next();
 		}
 
 		const token = authHeader.split(' ')[1];
