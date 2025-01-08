@@ -25,6 +25,16 @@ WORKDIR /app
 # copy the compiled binary from the build image
 COPY --from=build /app/server /app/server
 
+# add unprivileged user
+RUN groupadd -g 1869 bun
+RUN useradd -m -g 1869 -u 1869 bun
+
+# enable the unprivileged user to run the binary
+RUN chown bun:bun /app/server
+
+# switch to the unprivileged user
+USER bun
+
 # execute the binary as the express server
 SHELL ["/bin/bash", "-c"]
 CMD ./server
