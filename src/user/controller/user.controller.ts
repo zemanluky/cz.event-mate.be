@@ -1,8 +1,14 @@
 import express, {type Response} from "express";
 import {microserviceGuard} from "../helper/microservice.url.ts";
 import type {AppRequest} from "../types";
-import {authorsListQuerySchema, type TAuthorListQuery, type TUserIdParam, userIdParamSchema} from "../schema/request/user.schema.ts";
-import {getAuthorsList, getUser, getUserFriends} from "../service/user.service.ts";
+import {
+    authorsListQuerySchema,
+    type TAuthorListQuery, type TUserFilterQuery,
+    type TUserIdParam,
+    userFilterQuery,
+    userIdParamSchema
+} from "../schema/request/user.schema.ts";
+import {getAuthorsList, getUser, getUserFriends, listUsers} from "../service/user.service.ts";
 import {successResponse} from "../helper/response.helper.ts";
 import * as R from 'remeda';
 import {exportAuthorProfile, type TAuthor} from "../utils/user.utils.ts";
@@ -33,6 +39,14 @@ userController.get(
     async (req: AppRequest<TUserIdParam>, res: Response) => {
         const friendList = await getUserFriends(req.parsedParams!.id);
         successResponse(res, friendList.map(objectId => objectId.toString()));
+    }
+);
+
+userController.get(
+    '/', loginGuard(), queryValidator(userFilterQuery),
+    async (req: AppRequest<never,TUserFilterQuery>, res: Response) => {
+        const users = await listUsers(req.parsedQuery!);
+        successResponse(res, users);
     }
 );
 

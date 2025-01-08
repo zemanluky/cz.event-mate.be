@@ -8,6 +8,11 @@ export const usernameValidator = z.string()
     .min(5)
     .regex(/^[a-z_-]+$/gm);
 
+export const userFilterQuery = z.object({
+    search: z.string().optional()
+});
+export type TUserFilterQuery = z.infer<typeof userFilterQuery>;
+
 export const registerUserBodySchema = z.object({
     name: z.string().trim().min(1),
     surname: z.string().trim().min(1),
