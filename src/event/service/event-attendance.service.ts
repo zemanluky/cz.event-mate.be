@@ -60,11 +60,6 @@ export async function joinEvent(eventId: Types.ObjectId, userId: string): Promis
     if (event.private && !(await checkUserIsFriendOfOwner(event, userId)))
         throw new PermissionError("You are not authorized to join this event", "event:join_private");
 
-    // Check if user is allowed to mark attendance (only non-private events or members can mark)
-    if (event.private && event.ownerId.toString() !== userId) {
-        throw new PermissionError('You are not authorized to mark attendance for this event', "event");
-    }
-
     // add the user to the event's attendance list
     event.attendees.push(new Types.ObjectId(userId));
 
