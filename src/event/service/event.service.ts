@@ -17,18 +17,28 @@ import {endOfMonth, getDate, getDaysInMonth, startOfMonth} from "date-fns";
  * @param queryFilter
  * @param userId
  */
-export async function getFilteredEvents(queryFilter: TFilterEventsValidator, userId: string) {
+export async function getFilteredEvents(queryFilter: TFilterEventsValidator, userId?: string|undefined|null) {
     const { location, dateStart, dateEnd, rating, category, filter, pageSize, pageNumber, userId: authorId } = queryFilter;
 
-    // fetch list of friends of the current user
-    const friendListResponse: TResponse<Array<string>> = await fetch(microserviceUrl('user', `${userId}/friend-list`), {
-        headers: getFetchHeaders(),
-    }).then((response) => {
-        return response.json();
-    });
+    let friendList: Array<string> = [];
 
-    if (!friendListResponse.success)
-        throw new ServerError(`Failed to fetch friend list of current user due to an error on the microservice: ${friendListResponse.error.message}`);
+    if (userId) {
+        // fetch list of friends of the current user
+        const friendListResponse: TResponse<Array<string>> = await fetch(microserviceUrl('user', `${userId}/friend-list`), {
+            headers: getFetchHeaders(),
+        }).then((response) => {
+            return response.json();
+        });
+
+        if (!friendListResponse.success)
+            throw new ServerError(`Failed to fetch friend list of current user due to an error on the microservice: ${friendListResponse.error.message}`);
+
+        friendList = friendListResponse.data;
+    }
+
+    // the user cannot filter events by friends if they are not logged-in
+    if (!userId && filter === 'friends-only')
+        throw new BadRequestError('Cannot filter events by friends when you are not logged-in.', 'event.filter:friends-only-unauthenticated');
 
     const baseQuery = Event.find();
 
@@ -36,12 +46,12 @@ export async function getFilteredEvents(queryFilter: TFilterEventsValidator, use
     if (filter === 'friends-only') {
         // user is filtering private events of another user - they must be their friend
         // or the user is filtering their own private events
-        if (authorId && (friendListResponse.data.includes(authorId) || authorId === userId)) {
+        if (authorId && (friendList.includes(authorId) || authorId === userId)) {
             baseQuery.where({ private: true, ownerId: new Types.ObjectId(authorId) });
         }
         // the author filter is not set, so we are filtering private events of the user's friends
         else if (!authorId) {
-            baseQuery.where({ private: true, ownerId: { $in: friendListResponse.data.map(id => new Types.ObjectId(id)) } });
+            baseQuery.where({ private: true, ownerId: { $in: friendList.map(id => new Types.ObjectId(id)) } });
         }
         // we have an author filter set, but the author is not in the friend list
         else {
@@ -55,7 +65,12 @@ export async function getFilteredEvents(queryFilter: TFilterEventsValidator, use
         }
         // we are filtering all public events, but we don't probably want to get user's own events
         else {
-            baseQuery.where({ private: false, ownerId: { $ne: userId } });
+            if (userId) {
+                baseQuery.where({private: false, ownerId: {$ne: userId}});
+            }
+            else {
+                baseQuery.where({ private: false });
+            }
         }
     }
     // filtering private and non-private events
@@ -63,7 +78,7 @@ export async function getFilteredEvents(queryFilter: TFilterEventsValidator, use
         // we are filtering all events of a given user
         if (authorId) {
             // when the users are friends, we can filter both public and private events of the given user
-            if (friendListResponse.data.includes(authorId) || authorId === userId) {
+            if (friendList.includes(authorId) || authorId === userId) {
                 baseQuery.where({ ownerId: new Types.ObjectId(authorId) });
             }
             // otherwise we can only filter public events of the given user
@@ -73,10 +88,15 @@ export async function getFilteredEvents(queryFilter: TFilterEventsValidator, use
         }
         // we are filtering events of all users, so just filter out the user's own events and include private events of their friends
         else {
-            baseQuery.or([
-                { private: false, ownerId: { $ne: userId } },
-                { private: true, ownerId: { $in: friendListResponse.data.map(id => new Types.ObjectId(id)) } }
-            ]);
+            if (userId) {
+                baseQuery.or([
+                    {private: false, ownerId: {$ne: userId}},
+                    {private: true, ownerId: {$in: friendList.map(id => new Types.ObjectId(id))}}
+                ]);
+            }
+            else {
+                baseQuery.where({ private: false });
+            }
         }
     }
 
